@@ -9,13 +9,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Pix Check",
+  title: "Pixally",
   description: "Plataforma de gerenciamento de comprovantes Pix recebidos via WhatsApp",
   icons: {
     icon: [
       {url: '/favicon.svg',  type: 'image/svg+xml'}
     ],
-    apple: 'favicon.svg'
+    apple: '/favicon.svg'
   }
 };
 
@@ -26,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="pt-BR"
       className={`${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
