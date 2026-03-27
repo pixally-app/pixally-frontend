@@ -1,4 +1,8 @@
-import { Sidebar } from "@/components/layout/sidebar";
+import {
+  Sidebar,
+  SidebarProvider,
+  PageHeader,
+} from "@/components/layout/sidebar";
 
 export default function MainLayout({
   children,
@@ -6,9 +10,14 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <main className="flex-1 pl-sidebar">{children}</main>
-    </div>
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        <Sidebar />
+        <main className="flex-1 p-4 md:p-6">
+          <PageHeader />
+          {children}
+        </main>
+      </div>
+    </SidebarProvider>
   );
 }

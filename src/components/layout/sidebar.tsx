@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -11,10 +12,14 @@ import {
   MessageCircle,
   Settings,
   LogOut,
+  PanelLeft,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { useIsMobile } from "@/hooks/use-mobile";
+
+/* ─── Types ─── */
 
 interface NavItem {
   label: string;
@@ -23,6 +28,47 @@ interface NavItem {
   badge?: number;
   indicator?: "success";
 }
+
+/* ─── Sidebar context ─── */
+
+interface SidebarContextProps {
+  open: boolean;
+  toggleSidebar: () => void;
+  isMobile: boolean;
+}
+
+const SidebarContext = React.createContext<SidebarContextProps | null>(null);
+
+export function useSidebar() {
+  const ctx = React.useContext(SidebarContext);
+  if (!ctx) throw new Error("useSidebar must be used within <SidebarProvider>");
+  return ctx;
+}
+
+export function SidebarProvider({ children }: { children: React.ReactNode }) {
+  const isMobile = useIsMobile();
+  const [open, setOpen] = React.useState(true);
+
+  const toggleSidebar = React.useCallback(() => {
+    setOpen((prev) => !prev);
+  }, []);
+
+  // Close sidebar by default on mobile
+  React.useEffect(() => {
+    setOpen(!isMobile);
+  }, [isMobile]);
+
+  const value = React.useMemo(
+    () => ({ open, toggleSidebar, isMobile }),
+    [open, toggleSidebar, isMobile]
+  );
+
+  return (
+    <SidebarContext.Provider value={value}>{children}</SidebarContext.Provider>
+  );
+}
+
+/* ─── Nav data ─── */
 
 const mainNavItems: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -44,6 +90,28 @@ const bottomNavItem: NavItem = {
   href: "/login",
   icon: LogOut,
 };
+
+/* ─── Page titles ─── */
+
+const pageTitles: Record<string, string> = {
+  "/dashboard": "Dashboard",
+  "/receipts": "Comprovantes",
+  "/clients": "Clientes",
+  "/receivables": "Contas a Receber",
+  "/alerts": "Alertas",
+  "/whatsapp": "WhatsApp",
+  "/settings": "Configurações",
+};
+
+function getPageTitle(pathname: string): string {
+  if (pathname === "/") return "Dashboard";
+  for (const [route, title] of Object.entries(pageTitles)) {
+    if (pathname === route || pathname.startsWith(route + "/")) return title;
+  }
+  return "Pixally";
+}
+
+/* ─── Sub-components ─── */
 
 function SidebarHeader() {
   return (
@@ -69,12 +137,21 @@ function SidebarHeader() {
   );
 }
 
-function SidebarNavItem({ item, isActive }: { item: NavItem; isActive: boolean }) {
+function SidebarNavItem({
+  item,
+  isActive,
+  onClick,
+}: {
+  item: NavItem;
+  isActive: boolean;
+  onClick?: () => void;
+}) {
   const Icon = item.icon;
 
   return (
     <Link
       href={item.href}
+      onClick={onClick}
       className={cn(
         "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
         isActive
@@ -112,7 +189,7 @@ function SidebarFooter() {
   );
 }
 
-export function Sidebar() {
+function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
   const pathname = usePathname();
 
   function isActive(href: string) {
@@ -123,7 +200,7 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 flex w-sidebar flex-col border-r border-sidebar-border bg-sidebar">
+    <>
       <SidebarHeader />
 
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-2">
@@ -132,6 +209,7 @@ export function Sidebar() {
             key={item.href}
             item={item}
             isActive={isActive(item.href)}
+            onClick={onNavClick}
           />
         ))}
 
@@ -139,11 +217,86 @@ export function Sidebar() {
           <SidebarNavItem
             item={bottomNavItem}
             isActive={false}
+            onClick={onNavClick}
           />
         </div>
       </nav>
 
       <SidebarFooter />
-    </aside>
+    </>
   );
 }
+
+/* ─── Page header (PanelLeft + title) ─── */
+
+function PageHeader() {
+  const { toggleSidebar } = useSidebar();
+  const pathname = usePathname();
+  const title = getPageTitle(pathname);
+
+  return (
+    <div className="flex items-center gap-2 mb-4 md:mb-6">
+      <button
+        type="button"
+        onClick={toggleSidebar}
+        className="inline-flex items-center justify-center rounded-lg p-2 text-foreground hover:bg-accent cursor-pointer"
+        aria-label="Toggle sidebar"
+      >
+        <PanelLeft className="h-5 w-5" />
+      </button>
+      <h1 className="text-lg font-semibold text-foreground">{title}</h1>
+    </div>
+  );
+}
+
+/* ─── Sidebar ─── */
+
+export function Sidebar() {
+  const { open, isMobile, toggleSidebar } = useSidebar();
+
+  // Mobile: overlay sidebar
+  if (isMobile) {
+    return (
+      <>
+        {open && (
+          <div
+            className="fixed inset-0 z-40 bg-black/50"
+            onClick={toggleSidebar}
+          />
+        )}
+        <aside
+          className={cn(
+            "fixed inset-y-0 left-0 z-50 flex w-sidebar flex-col border-r border-sidebar-border bg-sidebar transition-transform duration-200 ease-linear",
+            open ? "translate-x-0" : "-translate-x-full"
+          )}
+        >
+          <SidebarContent onNavClick={toggleSidebar} />
+        </aside>
+      </>
+    );
+  }
+
+  // Desktop: collapsible sidebar
+  return (
+    <>
+      {/* Gap spacer — pushes main content */}
+      <div
+        className={cn(
+          "shrink-0 transition-[width] duration-200 ease-linear",
+          open ? "w-sidebar" : "w-0"
+        )}
+      />
+      {/* Fixed sidebar panel */}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-30 flex w-sidebar flex-col border-r border-sidebar-border bg-sidebar transition-[left] duration-200 ease-linear",
+          open ? "left-0" : "left-[calc(var(--sidebar-width)*-1)]"
+        )}
+      >
+        <SidebarContent />
+      </aside>
+    </>
+  );
+}
+
+export { PageHeader };
