@@ -19,8 +19,6 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-/* ─── Types ─── */
-
 interface NavItem {
   label: string;
   href: string;
@@ -28,8 +26,6 @@ interface NavItem {
   badge?: number;
   indicator?: "success";
 }
-
-/* ─── Sidebar context ─── */
 
 interface SidebarContextProps {
   open: boolean;
@@ -47,14 +43,19 @@ export function useSidebar() {
 
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
-  const [open, setOpen] = React.useState(true);
+  const [open, setOpen] = React.useState(() => !isMobile);
+  const hasUserToggled = React.useRef(false);
 
   const toggleSidebar = React.useCallback(() => {
+    hasUserToggled.current = true;
     setOpen((prev) => !prev);
   }, []);
 
-  // Close sidebar by default on mobile
   React.useEffect(() => {
+    if (hasUserToggled.current) {
+      hasUserToggled.current = false;
+      return;
+    }
     setOpen(!isMobile);
   }, [isMobile]);
 
@@ -67,8 +68,6 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
     <SidebarContext.Provider value={value}>{children}</SidebarContext.Provider>
   );
 }
-
-/* ─── Nav data ─── */
 
 const mainNavItems: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -91,8 +90,6 @@ const bottomNavItem: NavItem = {
   icon: LogOut,
 };
 
-/* ─── Page titles ─── */
-
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/receipts": "Comprovantes",
@@ -110,9 +107,6 @@ function getPageTitle(pathname: string): string {
   }
   return "Pixally";
 }
-
-/* ─── Sub-components ─── */
-
 function SidebarHeader() {
   return (
     <div className="flex items-center gap-2.5 px-6 py-5">
@@ -227,10 +221,8 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
   );
 }
 
-/* ─── Page header (PanelLeft + title) ─── */
-
 function PageHeader() {
-  const { toggleSidebar } = useSidebar();
+  const { open, toggleSidebar } = useSidebar();
   const pathname = usePathname();
   const title = getPageTitle(pathname);
 
@@ -239,6 +231,7 @@ function PageHeader() {
       <button
         type="button"
         onClick={toggleSidebar}
+        aria-expanded={open}
         className="inline-flex items-center justify-center rounded-lg p-2 text-foreground hover:bg-accent cursor-pointer"
         aria-label="Toggle sidebar"
       >
@@ -249,12 +242,9 @@ function PageHeader() {
   );
 }
 
-/* ─── Sidebar ─── */
-
 export function Sidebar() {
   const { open, isMobile, toggleSidebar } = useSidebar();
 
-  // Mobile: overlay sidebar
   if (isMobile) {
     return (
       <>
@@ -265,6 +255,8 @@ export function Sidebar() {
           />
         )}
         <aside
+          aria-hidden={!open}
+          inert={!open ? true : undefined}
           className={cn(
             "fixed inset-y-0 left-0 z-50 flex w-sidebar flex-col border-r border-sidebar-border bg-sidebar transition-transform duration-200 ease-linear",
             open ? "translate-x-0" : "-translate-x-full"
@@ -276,21 +268,20 @@ export function Sidebar() {
     );
   }
 
-  // Desktop: collapsible sidebar
   return (
     <>
-      {/* Gap spacer — pushes main content */}
       <div
         className={cn(
           "shrink-0 transition-[width] duration-200 ease-linear",
           open ? "w-sidebar" : "w-0"
         )}
       />
-      {/* Fixed sidebar panel */}
       <aside
+        aria-hidden={!open}
+        inert={!open ? true : undefined}
         className={cn(
           "fixed inset-y-0 left-0 z-30 flex w-sidebar flex-col border-r border-sidebar-border bg-sidebar transition-[left] duration-200 ease-linear",
-          open ? "left-0" : "left-[calc(var(--sidebar-width)*-1)]"
+          !open && "left-[calc(var(--sidebar-width)*-1)]"
         )}
       >
         <SidebarContent />
