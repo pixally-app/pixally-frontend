@@ -15,9 +15,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
           description: "group-[.toast]:text-muted-foreground",
           actionButton: "group-[.toast]:bg-primary group-[.toast]:text-white",
           cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
-          success: "group-[.toaster]:!bg-success group-[.toaster]:!text-white group-[.toaster]:!border-success",
-          error: "group-[.toaster]:!bg-destructive group-[.toaster]:!text-white group-[.toaster]:!border-destructive",
-          warning: "group-[.toaster]:!bg-warning group-[.toaster]:!text-white group-[.toaster]:!border-warning",
+          success: "group-[.toaster]:bg-success! group-[.toaster]:text-white! group-[.toaster]:border-success!",
+          error: "group-[.toaster]:bg-destructive! group-[.toaster]:text-white! group-[.toaster]:border-destructive!",
+          warning: "group-[.toaster]:bg-warning! group-[.toaster]:text-white! group-[.toaster]:border-warning!",
         },
       }}
       {...props}

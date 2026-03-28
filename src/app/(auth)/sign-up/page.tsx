@@ -13,7 +13,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { Input, inputBaseClasses } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -72,15 +72,17 @@ export default function SignUpPage() {
                 <IMaskInput
                   {...documentMaskOptions}
                   id="document"
+                  name={field.name}
                   placeholder="000.000.000-00"
                   inputMode="numeric"
                   aria-invalid={!!errors.document}
                   aria-describedby={
                     errors.document ? "document-error" : undefined
                   }
-                  className="flex h-10 w-full rounded-lg border border-border bg-input-background px-3 py-2 text-base text-foreground transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className={inputBaseClasses}
                   value={field.value}
                   onAccept={(value: string) => field.onChange(value)}
+                  onBlur={field.onBlur}
                   inputRef={field.ref}
                 />
               )}
@@ -102,14 +104,16 @@ export default function SignUpPage() {
                 <IMaskInput
                   {...phoneMaskOptions}
                   id="phone"
+                  name={field.name}
                   placeholder="(00) 00000-0000"
                   inputMode="numeric"
                   autoComplete="tel"
                   aria-invalid={!!errors.phone}
                   aria-describedby={errors.phone ? "phone-error" : undefined}
-                  className="flex h-10 w-full rounded-lg border border-border bg-input-background px-3 py-2 text-base text-foreground transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className={inputBaseClasses}
                   value={field.value}
                   onAccept={(value: string) => field.onChange(value)}
+                  onBlur={field.onBlur}
                   inputRef={field.ref}
                 />
               )}
@@ -157,6 +161,7 @@ export default function SignUpPage() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                aria-pressed={showPassword}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
