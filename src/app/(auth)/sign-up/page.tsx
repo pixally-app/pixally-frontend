@@ -15,6 +15,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export default function SignUpPage() {
   const {
@@ -28,6 +29,7 @@ export default function SignUpPage() {
 
   async function onSubmit(_data: SignUpFormData) {
     // TODO: integrate sign-up API
+    toast.success("Conta criada com sucesso!");
   }
 
   return (
