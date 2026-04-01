@@ -1,10 +1,11 @@
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   CircleCheckBig,
   Clock,
   AlertTriangle,
   FileText,
 } from "lucide-react";
+import { ReceiptsChart } from "@/components/dashboard/receipts-chart";
 
 const summaryCards = [
   {
@@ -38,7 +39,10 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {summaryCards.map((card) => (
-          <Card key={card.label} className="flex items-center justify-between p-5 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-lg cursor-pointer">
+          <Card
+            key={card.label}
+            className="flex items-center justify-between p-5 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-lg cursor-pointer"
+          >
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">{card.label}</p>
               <p className="text-2xl font-bold">{card.value}</p>
@@ -49,6 +53,17 @@ export default function DashboardPage() {
           </Card>
         ))}
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-bold">
+            Recebimentos dos últimos 7 dias
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ReceiptsChart />
+        </CardContent>
+      </Card>
     </div>
   );
 }
