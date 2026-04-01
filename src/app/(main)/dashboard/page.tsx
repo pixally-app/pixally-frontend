@@ -6,6 +6,8 @@ import {
   FileText,
 } from "lucide-react";
 import { ReceiptsChart } from "@/components/dashboard/receipts-chart";
+import { LatestReceipts } from "@/components/dashboard/latest-receipts";
+import Link from "next/link";
 
 const summaryCards = [
   {
@@ -62,6 +64,22 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           <ReceiptsChart />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex-row items-center justify-between">
+          <CardTitle className="text-lg font-bold">
+            Últimos Comprovantes
+          </CardTitle>
+          <Link
+            href="/receipts"
+            className="text-sm font-medium text-primary hover:underline"
+          >
+            Ver todos
+          </Link>
+        </CardHeader>
+        <CardContent>
+          <LatestReceipts />
         </CardContent>
       </Card>
     </div>
