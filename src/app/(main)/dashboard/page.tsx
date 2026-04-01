@@ -38,7 +38,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {summaryCards.map((card) => (
-          <Card key={card.label} className="flex items-center justify-between p-5">
+          <Card key={card.label} className="flex items-center justify-between p-5 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-lg cursor-pointer">
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">{card.label}</p>
               <p className="text-2xl font-bold">{card.value}</p>
