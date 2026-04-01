@@ -9,6 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const data = [
   { date: "25/03", valor: 1200 },
@@ -21,21 +22,53 @@ const data = [
 ];
 
 export function ReceiptsChart() {
+  const isMobile = useIsMobile();
+
   return (
-    <ResponsiveContainer width="100%" height={320}>
-      <BarChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-        <XAxis
-          dataKey="date"
-          axisLine={false}
-          tickLine={false}
-          tick={{ fill: "#717182", fontSize: 13 }}
+    <ResponsiveContainer width="100%" height={isMobile ? 350 : 320}>
+      <BarChart
+        data={data}
+        layout={isMobile ? "vertical" : "horizontal"}
+        margin={{ top: 10, right: 10, left: isMobile ? 0 : -10, bottom: 0 }}
+      >
+        <CartesianGrid
+          strokeDasharray="3 3"
+          vertical={!isMobile}
+          horizontal={isMobile}
+          stroke="#e5e7eb"
         />
-        <YAxis
-          axisLine={false}
-          tickLine={false}
-          tick={{ fill: "#717182", fontSize: 13 }}
-        />
+        {isMobile ? (
+          <>
+            <YAxis
+              type="category"
+              dataKey="date"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: "#717182", fontSize: 13 }}
+              width={45}
+            />
+            <XAxis
+              type="number"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: "#717182", fontSize: 13 }}
+            />
+          </>
+        ) : (
+          <>
+            <XAxis
+              dataKey="date"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: "#717182", fontSize: 13 }}
+            />
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: "#717182", fontSize: 13 }}
+            />
+          </>
+        )}
         <Tooltip
           cursor={{ fill: "rgba(10, 102, 255, 0.05)" }}
           contentStyle={{
@@ -51,7 +84,7 @@ export function ReceiptsChart() {
         <Bar
           dataKey="valor"
           fill="#0A66FF"
-          radius={[6, 6, 0, 0]}
+          radius={isMobile ? [0, 6, 6, 0] : [6, 6, 0, 0]}
           maxBarSize={48}
         />
       </BarChart>
