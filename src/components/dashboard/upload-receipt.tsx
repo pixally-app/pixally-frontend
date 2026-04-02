@@ -1,7 +1,9 @@
 "use client";
 
 import { useRef, useState, useCallback } from "react";
+import { toast } from "sonner";
 import { ArrowUpFromLine, CircleCheckBig } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/jpg", "application/pdf"];
 const MAX_SIZE_MB = 10;
@@ -17,10 +19,16 @@ export function UploadReceipt() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = useCallback((file: File) => {
-    if (!ACCEPTED_TYPES.includes(file.type)) return;
-    if (file.size > MAX_SIZE_MB * 1024 * 1024) return;
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      toast.error("Tipo de arquivo não suportado. Envie PNG, JPG ou PDF.");
+      return;
+    }
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+      toast.error(`Arquivo muito grande. O tamanho máximo é ${MAX_SIZE_MB}MB.`);
+      return;
+    }
     // TODO: processar arquivo
-    console.log("Arquivo selecionado:", file.name);
+    toast.success(`Arquivo "${file.name}" recebido com sucesso.`);
   }, []);
 
   const handleDrop = useCallback(
@@ -47,6 +55,7 @@ export function UploadReceipt() {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) handleFile(file);
+      e.target.value = "";
     },
     [handleFile]
   );
@@ -59,11 +68,12 @@ export function UploadReceipt() {
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
-        className={`flex w-full flex-1 flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-12 text-center transition-colors cursor-pointer ${
+        className={cn(
+          "flex w-full flex-1 flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-12 text-center transition-colors cursor-pointer",
           isDragging
             ? "border-primary bg-primary/5"
             : "border-border hover:border-primary/50"
-        }`}
+        )}
       >
         <div className="rounded-full bg-muted p-3 text-muted-foreground">
           <ArrowUpFromLine className="size-6" />

@@ -10,6 +10,7 @@ const statusConfig = {
 
 const receipts = [
   {
+    id: "1",
     name: "João Silva",
     date: "26/02/2026, 14:30:00",
     amount: "R$ 150,00",
@@ -17,6 +18,7 @@ const receipts = [
     source: "whatsapp" as const,
   },
   {
+    id: "2",
     name: "Maria Santos",
     date: "26/02/2026, 15:45:00",
     amount: "R$ 200,50",
@@ -24,6 +26,7 @@ const receipts = [
     source: "whatsapp" as const,
   },
   {
+    id: "3",
     name: "Pedro Costa",
     date: "26/02/2026, 16:20:00",
     amount: "R$ 150,00",
@@ -31,6 +34,7 @@ const receipts = [
     source: "whatsapp" as const,
   },
   {
+    id: "4",
     name: "Ana Paula Oliveira",
     date: "26/02/2026, 17:10:00",
     amount: "R$ 320,00",
@@ -38,6 +42,7 @@ const receipts = [
     source: "whatsapp" as const,
   },
   {
+    id: "5",
     name: "Carlos Mendes",
     date: "26/02/2026, 18:00:00",
     amount: "R$ 0,00",
@@ -45,6 +50,7 @@ const receipts = [
     source: "whatsapp" as const,
   },
   {
+    id: "6",
     name: "Juliana Ferreira",
     date: "25/02/2026, 10:30:00",
     amount: "R$ 180,00",
@@ -56,12 +62,12 @@ const receipts = [
 export function LatestReceipts() {
   return (
     <div className="divide-y divide-border">
-      {receipts.map((receipt, index) => {
+      {receipts.map((receipt) => {
         const status = statusConfig[receipt.status];
         return (
           <div
-            key={index}
-            className="flex items-center gap-4 py-4 px-3 -mx-3 rounded-md transition-colors hover:bg-muted/50 cursor-pointer"
+            key={receipt.id}
+            className="flex items-center gap-4 py-4 px-3 -mx-3 rounded-md transition-colors"
           >
             <div className="rounded-full bg-muted p-2.5 text-muted-foreground">
               {receipt.source === "whatsapp" ? (

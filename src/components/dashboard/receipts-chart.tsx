@@ -35,7 +35,7 @@ export function ReceiptsChart() {
           strokeDasharray="3 3"
           vertical={!isMobile}
           horizontal={isMobile}
-          stroke="#e5e7eb"
+          stroke="var(--border)"
         />
         {isMobile ? (
           <>
@@ -44,14 +44,14 @@ export function ReceiptsChart() {
               dataKey="date"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#717182", fontSize: 13 }}
+              tick={{ fill: "var(--muted-foreground)", fontSize: 13 }}
               width={45}
             />
             <XAxis
               type="number"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#717182", fontSize: 13 }}
+              tick={{ fill: "var(--muted-foreground)", fontSize: 13 }}
             />
           </>
         ) : (
@@ -60,20 +60,20 @@ export function ReceiptsChart() {
               dataKey="date"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#717182", fontSize: 13 }}
+              tick={{ fill: "var(--muted-foreground)", fontSize: 13 }}
             />
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#717182", fontSize: 13 }}
+              tick={{ fill: "var(--muted-foreground)", fontSize: 13 }}
             />
           </>
         )}
         <Tooltip
-          cursor={{ fill: "rgba(10, 102, 255, 0.05)" }}
+          cursor={{ fill: "color-mix(in srgb, var(--chart-1) 5%, transparent)" }}
           contentStyle={{
             borderRadius: "8px",
-            border: "1px solid #e5e7eb",
+            border: "1px solid var(--border)",
             boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
           }}
           formatter={(value) => [
@@ -83,7 +83,7 @@ export function ReceiptsChart() {
         />
         <Bar
           dataKey="valor"
-          fill="#0A66FF"
+          fill="var(--chart-1)"
           radius={isMobile ? [0, 6, 6, 0] : [6, 6, 0, 0]}
           maxBarSize={48}
         />

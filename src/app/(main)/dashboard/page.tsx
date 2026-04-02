@@ -44,7 +44,7 @@ export default function DashboardPage() {
         {summaryCards.map((card) => (
           <Card
             key={card.label}
-            className="flex items-center justify-between p-5 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-lg cursor-pointer"
+            className="flex items-center justify-between p-5 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-lg"
           >
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">{card.label}</p>
