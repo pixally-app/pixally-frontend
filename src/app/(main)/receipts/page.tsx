@@ -198,7 +198,7 @@ export default function ReceiptsPage() {
                   <TableCell>
                     <Link
                       href={`/receipts/${receipt.id}`}
-                      className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                      className="inline-flex items-center gap-1.5 text-sm font-medium text-primary"
                     >
                       <Eye className="size-4" />
                       Ver
