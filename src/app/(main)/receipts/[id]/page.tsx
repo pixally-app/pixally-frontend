@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 export default function ReceiptDetailsPage({
   params,
@@ -70,6 +71,86 @@ export default function ReceiptDetailsPage({
                 Ver conta a receber
                 <ArrowRight className="size-4" />
               </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex-row items-center justify-between">
+              <CardTitle className="text-lg font-bold">
+                Dados do Pagador
+              </CardTitle>
+              <Button variant="outline" size="sm">
+                <Pencil className="size-4" />
+                Editar
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <dl className="space-y-3">
+                <div className="flex justify-between">
+                  <dt className="text-sm text-muted-foreground">Nome</dt>
+                  <dd className="text-sm font-medium">Maria Santos</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-sm text-muted-foreground">Agência</dt>
+                  <dd className="text-sm font-medium">0001</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-sm text-muted-foreground">Conta</dt>
+                  <dd className="text-sm font-medium">34895931-5</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-sm text-muted-foreground">CPF/CNPJ</dt>
+                  <dd className="text-sm font-medium">***.916.152.***</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-sm text-muted-foreground">Banco</dt>
+                  <dd className="text-sm font-medium">NU PAGAMENTOS _ IP</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-sm text-muted-foreground">Valor</dt>
+                  <dd className="text-sm font-semibold text-success">R$ 200,50</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-sm text-muted-foreground">Descrição</dt>
+                  <dd className="text-sm font-medium text-right max-w-[60%]">
+                    Pagamento referente ao serviço de automação
+                  </dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-sm text-muted-foreground">Data e Hora do Pagamento</dt>
+                  <dd className="text-sm font-medium">16/02/2026, 11:55:01</dd>
+                </div>
+              </dl>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-bold">
+                Dados do Recebedor
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl className="space-y-3">
+                <div className="flex justify-between">
+                  <dt className="text-sm text-muted-foreground">Nome:</dt>
+                  <dd className="text-sm font-medium">Melo Automação e Sistemas</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-sm text-muted-foreground">Banco:</dt>
+                  <dd className="text-sm font-medium">BCO DO BRASIL S.A.</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-sm text-muted-foreground">CPF/CNPJ:</dt>
+                  <dd className="text-sm font-medium">12.345.678/0001-90</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-sm text-muted-foreground">ID da Transação PIX:</dt>
+                  <dd className="text-sm font-medium text-right max-w-[60%] break-all">
+                    F345678901234567890123456789018C
+                  </dd>
+                </div>
+              </dl>
             </CardContent>
           </Card>
         </div>
