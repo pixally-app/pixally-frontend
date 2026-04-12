@@ -2,7 +2,7 @@
 
 import { use } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Pencil } from "lucide-react";
+import { ArrowLeft, ArrowRight, Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -51,7 +51,15 @@ export default function ReceiptDetailsPage({
           <ArrowLeft className="size-4" />
           Voltar
         </Link>
-        <h1 className="text-2xl font-bold">Detalhes do Comprovante</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Detalhes do Comprovante</h1>
+          {receipt.status === "problema" && (
+            <Button variant="destructive">
+              <Trash2 className="size-4" />
+              Deletar
+            </Button>
+          )}
+        </div>
         <p className="text-sm text-muted-foreground">
           ID da Transação PIX: {receipt.transactionId}
         </p>
