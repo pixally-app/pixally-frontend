@@ -1,11 +1,12 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Pencil, Trash2, X, Check } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { receipts, statusConfig, statusDescription } from "@/data/mock-receipts";
 
@@ -24,6 +25,17 @@ export default function ReceiptDetailsPage({
 }) {
   const { id } = use(params);
   const receipt = receipts.find((r) => r.id === id);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [payerData, setPayerData] = useState({
+    clientName: receipt?.clientName ?? "",
+    agency: receipt?.agency ?? "",
+    account: receipt?.account ?? "",
+    cpfCnpj: receipt?.cpfCnpj ?? "",
+    clientBank: receipt?.clientBank ?? "",
+    amount: receipt?.amount ?? "",
+    description: receipt?.description ?? "",
+  });
 
   if (!receipt) {
     return (
@@ -94,7 +106,6 @@ export default function ReceiptDetailsPage({
         </div>
 
         <div className="space-y-6">
-          {/* Status badge */}
           <Card className={statusBgColor[receipt.status]}>
             <CardContent className="p-4">
               <Badge variant={status.variant} className="text-sm px-3 py-1">
@@ -106,7 +117,6 @@ export default function ReceiptDetailsPage({
             </CardContent>
           </Card>
 
-          {/* Conta a receber vinculada */}
           {receipt.linkedReceivable && (
             <Card>
               <CardContent className="p-4">
@@ -128,58 +138,170 @@ export default function ReceiptDetailsPage({
             </Card>
           )}
 
-          {/* Dados do Pagador */}
           <Card>
             <CardHeader className="flex-row items-center justify-between">
               <CardTitle className="text-lg font-bold">
                 Dados do Pagador
               </CardTitle>
-              <Button variant="outline" size="sm">
-                <Pencil className="size-4" />
-                Editar
-              </Button>
+              {isEditing ? (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setPayerData({
+                        clientName: receipt.clientName,
+                        agency: receipt.agency,
+                        account: receipt.account,
+                        cpfCnpj: receipt.cpfCnpj,
+                        clientBank: receipt.clientBank,
+                        amount: receipt.amount,
+                        description: receipt.description,
+                      });
+                      setIsEditing(false);
+                    }}
+                  >
+                    <X className="size-4" />
+                    Cancelar
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      // TODO: integrar com API
+                      setIsEditing(false);
+                    }}
+                  >
+                    <Check className="size-4" />
+                    Salvar
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditing(true)}
+                >
+                  <Pencil className="size-4" />
+                  Editar
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
               <dl className="space-y-3">
-                <div className="flex justify-between">
+                <div className="flex items-center justify-between">
                   <dt className="text-sm text-muted-foreground">Nome</dt>
-                  <dd className="text-sm font-medium">{receipt.clientName}</dd>
+                  {isEditing ? (
+                    <Input
+                      className="w-[60%] h-8 text-sm"
+                      value={payerData.clientName}
+                      onChange={(e) =>
+                        setPayerData({ ...payerData, clientName: e.target.value })
+                      }
+                    />
+                  ) : (
+                    <dd className="text-sm font-medium">{payerData.clientName}</dd>
+                  )}
                 </div>
-                <div className="flex justify-between">
+                <div className="flex items-center justify-between">
                   <dt className="text-sm text-muted-foreground">Agência</dt>
-                  <dd className="text-sm font-medium">{receipt.agency}</dd>
+                  {isEditing ? (
+                    <Input
+                      className="w-[60%] h-8 text-sm"
+                      value={payerData.agency}
+                      onChange={(e) =>
+                        setPayerData({ ...payerData, agency: e.target.value })
+                      }
+                    />
+                  ) : (
+                    <dd className="text-sm font-medium">{payerData.agency}</dd>
+                  )}
                 </div>
-                <div className="flex justify-between">
+                <div className="flex items-center justify-between">
                   <dt className="text-sm text-muted-foreground">Conta</dt>
-                  <dd className="text-sm font-medium">{receipt.account}</dd>
+                  {isEditing ? (
+                    <Input
+                      className="w-[60%] h-8 text-sm"
+                      value={payerData.account}
+                      onChange={(e) =>
+                        setPayerData({ ...payerData, account: e.target.value })
+                      }
+                    />
+                  ) : (
+                    <dd className="text-sm font-medium">{payerData.account}</dd>
+                  )}
                 </div>
-                <div className="flex justify-between">
+                <div className="flex items-center justify-between">
                   <dt className="text-sm text-muted-foreground">CPF/CNPJ</dt>
-                  <dd className="text-sm font-medium">{receipt.cpfCnpj}</dd>
+                  {isEditing ? (
+                    <Input
+                      className="w-[60%] h-8 text-sm"
+                      value={payerData.cpfCnpj}
+                      onChange={(e) =>
+                        setPayerData({ ...payerData, cpfCnpj: e.target.value })
+                      }
+                    />
+                  ) : (
+                    <dd className="text-sm font-medium">{payerData.cpfCnpj}</dd>
+                  )}
                 </div>
-                <div className="flex justify-between">
+                <div className="flex items-center justify-between">
                   <dt className="text-sm text-muted-foreground">Banco</dt>
-                  <dd className="text-sm font-medium">{receipt.clientBank}</dd>
+                  {isEditing ? (
+                    <Input
+                      className="w-[60%] h-8 text-sm"
+                      value={payerData.clientBank}
+                      onChange={(e) =>
+                        setPayerData({ ...payerData, clientBank: e.target.value })
+                      }
+                    />
+                  ) : (
+                    <dd className="text-sm font-medium">{payerData.clientBank}</dd>
+                  )}
                 </div>
-                <div className="flex justify-between">
+                <div className="flex items-center justify-between">
                   <dt className="text-sm text-muted-foreground">Valor</dt>
-                  <dd className="text-sm font-semibold text-success">{receipt.amount}</dd>
+                  {isEditing ? (
+                    <Input
+                      className="w-[60%] h-8 text-sm"
+                      value={payerData.amount}
+                      onChange={(e) =>
+                        setPayerData({ ...payerData, amount: e.target.value })
+                      }
+                    />
+                  ) : (
+                    <dd className="text-sm font-semibold text-success">
+                      {payerData.amount}
+                    </dd>
+                  )}
                 </div>
-                <div className="flex justify-between">
+                <div className="flex items-center justify-between">
                   <dt className="text-sm text-muted-foreground">Descrição</dt>
-                  <dd className="text-sm font-medium text-right max-w-[60%]">
-                    {receipt.description}
-                  </dd>
+                  {isEditing ? (
+                    <Input
+                      className="w-[60%] h-8 text-sm"
+                      value={payerData.description}
+                      onChange={(e) =>
+                        setPayerData({ ...payerData, description: e.target.value })
+                      }
+                    />
+                  ) : (
+                    <dd className="text-sm font-medium text-right max-w-[60%]">
+                      {payerData.description}
+                    </dd>
+                  )}
                 </div>
-                <div className="flex justify-between">
-                  <dt className="text-sm text-muted-foreground">Data e Hora do Pagamento</dt>
-                  <dd className="text-sm font-medium">{receipt.date}, {receipt.time}</dd>
+                <div className="flex items-center justify-between">
+                  <dt className="text-sm text-muted-foreground">
+                    Data e Hora do Pagamento
+                  </dt>
+                  <dd className="text-sm font-medium">
+                    {receipt.date}, {receipt.time}
+                  </dd>
                 </div>
               </dl>
             </CardContent>
           </Card>
 
-          {/* Dados do Recebedor */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg font-bold">
