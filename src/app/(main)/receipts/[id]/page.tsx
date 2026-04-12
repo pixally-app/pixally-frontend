@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { receipts, statusConfig, statusDescription } from "@/data/mock-receipts";
 
 const statusBgColor: Record<string, string> = {
@@ -54,10 +55,21 @@ export default function ReceiptDetailsPage({
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Detalhes do Comprovante</h1>
           {receipt.status === "problema" && (
-            <Button variant="destructive">
-              <Trash2 className="size-4" />
-              Deletar
-            </Button>
+            <ConfirmDialog
+              trigger={
+                <Button variant="destructive">
+                  <Trash2 className="size-4" />
+                  Deletar
+                </Button>
+              }
+              title="Excluir comprovante"
+              description="Tem certeza que deseja excluir este comprovante? Esta ação não pode ser desfeita."
+              confirmLabel="Excluir"
+              icon={<Trash2 className="size-4" />}
+              onConfirm={() => {
+                // TODO: integrar com API
+              }}
+            />
           )}
         </div>
         <p className="text-sm text-muted-foreground">
