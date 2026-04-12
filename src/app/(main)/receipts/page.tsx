@@ -28,41 +28,7 @@ import {
   Eye,
 } from "lucide-react";
 import Link from "next/link";
-
-type ReceiptStatus = "conciliado" | "problema" | "alerta" | "recebido" | "analisando";
-type ReceiptSource = "whatsapp" | "manual";
-
-interface Receipt {
-  id: string;
-  date: string;
-  time: string;
-  clientName: string;
-  clientBank: string;
-  amount: string;
-  status: ReceiptStatus;
-  source: ReceiptSource;
-}
-
-const statusConfig: Record<ReceiptStatus, { label: string; variant: "success" | "destructive" | "warning" | "default" | "secondary" }> = {
-  conciliado: { label: "Conciliado", variant: "success" },
-  problema: { label: "Problema", variant: "destructive" },
-  alerta: { label: "Alerta", variant: "warning" },
-  recebido: { label: "Recebido", variant: "success" },
-  analisando: { label: "Analisando", variant: "secondary" },
-};
-
-const receipts: Receipt[] = [
-  { id: "1", date: "26/02/2026", time: "14:30", clientName: "João Silva", clientBank: "Nubank", amount: "R$ 150.00", status: "conciliado", source: "whatsapp" },
-  { id: "2", date: "26/02/2026", time: "15:45", clientName: "Maria Santos", clientBank: "Inter", amount: "R$ 200.50", status: "conciliado", source: "whatsapp" },
-  { id: "3", date: "26/02/2026", time: "16:20", clientName: "Pedro Costa", clientBank: "Nubank", amount: "R$ 150.00", status: "problema", source: "whatsapp" },
-  { id: "4", date: "26/02/2026", time: "17:10", clientName: "Ana Paula Oliveira", clientBank: "Itaú", amount: "R$ 320.00", status: "conciliado", source: "whatsapp" },
-  { id: "5", date: "26/02/2026", time: "18:00", clientName: "Carlos Mendes", clientBank: "Banco do Brasil", amount: "R$ 100.00", status: "alerta", source: "whatsapp" },
-  { id: "6", date: "25/02/2026", time: "10:30", clientName: "Juliana Ferreira", clientBank: "PicPay", amount: "R$ 180.00", status: "recebido", source: "manual" },
-  { id: "7", date: "25/02/2026", time: "14:20", clientName: "Roberto Alves", clientBank: "Santander", amount: "R$ 250.00", status: "recebido", source: "whatsapp" },
-  { id: "8", date: "24/02/2026", time: "09:15", clientName: "Fernanda Lima", clientBank: "Nubank", amount: "R$ 150.00", status: "analisando", source: "whatsapp" },
-  { id: "9", date: "24/02/2026", time: "11:40", clientName: "Lucas Rodrigues", clientBank: "C6 Bank", amount: "R$ 450.00", status: "recebido", source: "manual" },
-  { id: "10", date: "23/02/2026", time: "16:30", clientName: "Mariana Castro", clientBank: "Inter", amount: "R$ 200.00", status: "alerta", source: "whatsapp" },
-];
+import { receipts, statusConfig } from "@/data/mock-receipts";
 
 const sourceIcon = {
   whatsapp: <MessageCircle className="size-4" />,
