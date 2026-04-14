@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Clock, CheckCircle2, AlertTriangle } from "lucide-react";
-import { receivables } from "@/data/mock-receivables";
+import { receivables, type ReceivableStatus } from "@/data/mock-receivables";
 
 function formatCurrency(cents: number) {
   return (cents / 100).toLocaleString("pt-BR", {
@@ -12,7 +13,23 @@ function formatCurrency(cents: number) {
   });
 }
 
+const filters = [
+  { label: "Todos", value: "all" },
+  { label: "Pendentes", value: "pending" },
+  { label: "Conciliados", value: "reconciled" },
+  { label: "Vencidos", value: "overdue" },
+] as const;
+
+type FilterValue = (typeof filters)[number]["value"];
+
 export default function ReceivablesPage() {
+  const [filter, setFilter] = useState<FilterValue>("all");
+
+  const filtered = useMemo(() => {
+    if (filter === "all") return receivables;
+    return receivables.filter((r) => r.status === filter);
+  }, [filter]);
+
   const summary = useMemo(() => {
     let pending = 0;
     let reconciled = 0;
@@ -72,6 +89,19 @@ export default function ReceivablesPage() {
             </p>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="flex items-center gap-2">
+        {filters.map((f) => (
+          <Button
+            key={f.value}
+            variant={filter === f.value ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFilter(f.value)}
+          >
+            {f.label}
+          </Button>
+        ))}
       </div>
     </div>
   );
