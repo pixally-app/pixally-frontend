@@ -40,7 +40,7 @@ export function ConfirmDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          <DialogDescription className="text-base">{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <DialogClose asChild>
