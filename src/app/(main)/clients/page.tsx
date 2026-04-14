@@ -1,11 +1,26 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Users, Phone, FileText } from "lucide-react";
+import { Users, Phone, FileText, Search } from "lucide-react";
 import { clients } from "@/data/mock-clients";
 
 export default function ClientsPage() {
+  const [search, setSearch] = useState("");
+
+  const filtered = useMemo(() => {
+    if (!search) return clients;
+    const term = search.toLowerCase();
+    return clients.filter(
+      (c) =>
+        c.name.toLowerCase().includes(term) ||
+        c.cpfCnpj.includes(term) ||
+        c.phone.includes(term)
+    );
+  }, [search]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -15,8 +30,21 @@ export default function ClientsPage() {
         </p>
       </div>
 
+      <div className="flex items-center gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por nome, CPF/CNPJ ou telefone..."
+            aria-label="Buscar por nome, CPF/CNPJ ou telefone"
+            className="pl-9"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {clients.map((client) => {
+        {filtered.map((client) => {
           const hasReceivable = client.totalReceivable !== "R$ 0.00";
 
           return (
