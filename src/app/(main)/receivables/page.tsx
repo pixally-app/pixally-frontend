@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Clock, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Clock, CheckCircle2, AlertTriangle, Plus } from "lucide-react";
 import { receivables, type ReceivableStatus } from "@/data/mock-receivables";
 
 function formatCurrency(cents: number) {
@@ -91,17 +91,24 @@ export default function ReceivablesPage() {
         </Card>
       </div>
 
-      <div className="flex items-center gap-2">
-        {filters.map((f) => (
-          <Button
-            key={f.value}
-            variant={filter === f.value ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilter(f.value)}
-          >
-            {f.label}
-          </Button>
-        ))}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {filters.map((f) => (
+            <Button
+              key={f.value}
+              variant={filter === f.value ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilter(f.value)}
+            >
+              {f.label}
+            </Button>
+          ))}
+        </div>
+
+        <Button>
+          <Plus className="size-4" />
+          Nova Conta a Receber
+        </Button>
       </div>
     </div>
   );
