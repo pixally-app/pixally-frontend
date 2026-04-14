@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Users, Phone, FileText, Search, Plus } from "lucide-react";
 import { clients } from "@/data/mock-clients";
+import { ClientFormDialog } from "@/components/clients/client-form-dialog";
 
 export default function ClientsPage() {
   const [search, setSearch] = useState("");
@@ -42,10 +43,21 @@ export default function ClientsPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <Button>
-          <Plus className="size-4" />
-          Novo Cliente
-        </Button>
+
+        <ClientFormDialog
+          trigger={
+            <Button>
+              <Plus className="size-4" />
+              Novo Cliente
+            </Button>
+          }
+          title="Novo Cliente"
+          description="Preencha os dados do novo cliente."
+          onSubmit={(data) => {
+            // TODO: integrar com API
+            console.log(data);
+          }}
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
