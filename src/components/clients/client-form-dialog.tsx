@@ -60,7 +60,8 @@ export function ClientFormDialog({
     }
   }
 
-  function handleSubmit() {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     onSubmit(form);
     setOpen(false);
   }
@@ -74,80 +75,82 @@ export function ClientFormDialog({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-2">
-          <div className="space-y-2">
-            <Label htmlFor="client-name">Nome</Label>
-            <Input
-              id="client-name"
-              placeholder="Nome completo"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="client-name">Nome</Label>
+              <Input
+                id="client-name"
+                placeholder="Nome completo"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="client-nickname">Apelido</Label>
+              <Input
+                id="client-nickname"
+                placeholder="Apelido"
+                value={form.nickname}
+                onChange={(e) => setForm({ ...form, nickname: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="client-cpfCnpj">CPF/CNPJ</Label>
+              <Input
+                id="client-cpfCnpj"
+                placeholder="000.000.000-00"
+                value={form.cpfCnpj}
+                onChange={(e) => setForm({ ...form, cpfCnpj: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="client-phone">Telefone</Label>
+              <Input
+                id="client-phone"
+                placeholder="+55 69 99999-9999"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="client-street">Rua/Avenida</Label>
+              <Input
+                id="client-street"
+                placeholder="Rua ou Avenida"
+                value={form.street}
+                onChange={(e) => setForm({ ...form, street: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="client-neighborhood">Bairro</Label>
+              <Input
+                id="client-neighborhood"
+                placeholder="Bairro"
+                value={form.neighborhood}
+                onChange={(e) =>
+                  setForm({ ...form, neighborhood: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="client-number">Número</Label>
+              <Input
+                id="client-number"
+                placeholder="Nº"
+                value={form.number}
+                onChange={(e) => setForm({ ...form, number: e.target.value })}
+              />
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="client-nickname">Apelido</Label>
-            <Input
-              id="client-nickname"
-              placeholder="Apelido"
-              value={form.nickname}
-              onChange={(e) => setForm({ ...form, nickname: e.target.value })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="client-cpfCnpj">CPF/CNPJ</Label>
-            <Input
-              id="client-cpfCnpj"
-              placeholder="000.000.000-00"
-              value={form.cpfCnpj}
-              onChange={(e) => setForm({ ...form, cpfCnpj: e.target.value })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="client-phone">Telefone</Label>
-            <Input
-              id="client-phone"
-              placeholder="+55 69 99999-9999"
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="client-street">Rua/Avenida</Label>
-            <Input
-              id="client-street"
-              placeholder="Rua ou Avenida"
-              value={form.street}
-              onChange={(e) => setForm({ ...form, street: e.target.value })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="client-neighborhood">Bairro</Label>
-            <Input
-              id="client-neighborhood"
-              placeholder="Bairro"
-              value={form.neighborhood}
-              onChange={(e) =>
-                setForm({ ...form, neighborhood: e.target.value })
-              }
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="client-number">Número</Label>
-            <Input
-              id="client-number"
-              placeholder="Nº"
-              value={form.number}
-              onChange={(e) => setForm({ ...form, number: e.target.value })}
-            />
-          </div>
-        </div>
 
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline">Cancelar</Button>
-          </DialogClose>
-          <Button onClick={handleSubmit}>Salvar</Button>
-        </DialogFooter>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">Cancelar</Button>
+            </DialogClose>
+            <Button type="submit">Salvar</Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

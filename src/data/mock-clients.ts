@@ -4,8 +4,8 @@ export interface Client {
   cpfCnpj: string;
   phone: string;
   receiptsCount: number;
-  totalReceived: string;
-  totalReceivable: string;
+  totalReceived: number;
+  totalReceivable: number;
 }
 
 export const clients: Client[] = [
@@ -15,8 +15,8 @@ export const clients: Client[] = [
     cpfCnpj: "123.456.789-00",
     phone: "+55 11 98765-4321",
     receiptsCount: 3,
-    totalReceived: "R$ 450.00",
-    totalReceivable: "R$ 350.00",
+    totalReceived: 45000,
+    totalReceivable: 35000,
   },
   {
     id: "2",
@@ -24,8 +24,8 @@ export const clients: Client[] = [
     cpfCnpj: "234.567.890-11",
     phone: "+55 11 97654-3210",
     receiptsCount: 2,
-    totalReceived: "R$ 400.00",
-    totalReceivable: "R$ 200.50",
+    totalReceived: 40000,
+    totalReceivable: 20050,
   },
   {
     id: "3",
@@ -33,8 +33,8 @@ export const clients: Client[] = [
     cpfCnpj: "345.678.901-22",
     phone: "+55 11 96543-2109",
     receiptsCount: 1,
-    totalReceived: "R$ 150.00",
-    totalReceivable: "R$ 0.00",
+    totalReceived: 15000,
+    totalReceivable: 0,
   },
   {
     id: "4",
@@ -42,8 +42,8 @@ export const clients: Client[] = [
     cpfCnpj: "456.789.012-33",
     phone: "+55 11 95432-1098",
     receiptsCount: 1,
-    totalReceived: "R$ 320.00",
-    totalReceivable: "R$ 0.00",
+    totalReceived: 32000,
+    totalReceivable: 0,
   },
   {
     id: "5",
@@ -51,7 +51,7 @@ export const clients: Client[] = [
     cpfCnpj: "567.890.123-44",
     phone: "+55 11 94321-0987",
     receiptsCount: 1,
-    totalReceived: "R$ 0.00",
-    totalReceivable: "R$ 180.00",
+    totalReceived: 0,
+    totalReceivable: 18000,
   },
 ];

@@ -10,6 +10,13 @@ import { clients } from "@/data/mock-clients";
 import { ClientFormDialog } from "@/components/clients/client-form-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
+function formatCurrency(cents: number) {
+  return (cents / 100).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
+}
+
 export default function ClientsPage() {
   const [search, setSearch] = useState("");
 
@@ -63,7 +70,7 @@ export default function ClientsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filtered.map((client) => {
-          const hasReceivable = client.totalReceivable !== "R$ 0.00";
+          const hasReceivable = client.totalReceivable > 0;
 
           return (
             <Card key={client.id} className="relative">
@@ -103,13 +110,13 @@ export default function ClientsPage() {
                     <div>
                       <p className="text-muted-foreground">Total Recebido</p>
                       <p className="font-semibold text-success">
-                        {client.totalReceived}
+                        {formatCurrency(client.totalReceived)}
                       </p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">A Receber</p>
                       <p className="font-semibold text-destructive">
-                        {client.totalReceivable}
+                        {formatCurrency(client.totalReceivable)}
                       </p>
                     </div>
                   </div>
@@ -117,7 +124,7 @@ export default function ClientsPage() {
                   <div className="flex items-center gap-1">
                     <ClientFormDialog
                       trigger={
-                        <Button variant="ghost" size="icon" className="size-8">
+                        <Button variant="ghost" size="icon" className="size-8" aria-label={`Editar cliente ${client.name}`}>
                           <Pencil className="size-3.5" />
                         </Button>
                       }
@@ -139,7 +146,7 @@ export default function ClientsPage() {
                     />
                     <ConfirmDialog
                       trigger={
-                        <Button variant="ghost" size="icon" className="size-8 text-destructive hover:text-destructive hover:bg-destructive/10">
+                        <Button variant="ghost" size="icon" className="size-8 text-destructive hover:text-destructive hover:bg-destructive/10" aria-label={`Excluir cliente ${client.name}`}>
                           <Trash2 className="size-3.5" />
                         </Button>
                       }
