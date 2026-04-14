@@ -5,9 +5,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Phone, FileText, Search, Plus } from "lucide-react";
+import { Users, Phone, FileText, Search, Plus, Pencil, Trash2 } from "lucide-react";
 import { clients } from "@/data/mock-clients";
 import { ClientFormDialog } from "@/components/clients/client-form-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export default function ClientsPage() {
   const [search, setSearch] = useState("");
@@ -97,18 +98,60 @@ export default function ClientsPage() {
                   </div>
                 </div>
 
-                <div className="flex gap-6 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Total Recebido</p>
-                    <p className="font-semibold text-success">
-                      {client.totalReceived}
-                    </p>
+                <div className="flex items-end justify-between">
+                  <div className="flex gap-6 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Total Recebido</p>
+                      <p className="font-semibold text-success">
+                        {client.totalReceived}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">A Receber</p>
+                      <p className="font-semibold text-destructive">
+                        {client.totalReceivable}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">A Receber</p>
-                    <p className="font-semibold text-destructive">
-                      {client.totalReceivable}
-                    </p>
+
+                  <div className="flex items-center gap-1">
+                    <ClientFormDialog
+                      trigger={
+                        <Button variant="ghost" size="icon" className="size-8">
+                          <Pencil className="size-3.5" />
+                        </Button>
+                      }
+                      title="Editar Cliente"
+                      description="Atualize os dados do cliente."
+                      defaultValues={{
+                        name: client.name,
+                        nickname: "",
+                        cpfCnpj: client.cpfCnpj,
+                        phone: client.phone,
+                        street: "",
+                        neighborhood: "",
+                        number: "",
+                      }}
+                      onSubmit={(data) => {
+                        // TODO: integrar com API
+                        console.log(data);
+                      }}
+                    />
+                    <ConfirmDialog
+                      trigger={
+                        <Button variant="ghost" size="icon" className="size-8 text-destructive hover:text-destructive hover:bg-destructive/10">
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      }
+                      title="Excluir cliente"
+                      description={`Tem certeza que deseja excluir ${client.name}? Esta ação não pode ser desfeita.`}
+                      confirmLabel="Excluir"
+                      icon={<Trash2 className="size-4" />}
+                      onConfirm={() => {
+                        // TODO: integrar com API
+                        console.log("delete", client.id);
+                      }}
+                    />
                   </div>
                 </div>
               </CardContent>
