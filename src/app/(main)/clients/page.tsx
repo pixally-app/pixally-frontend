@@ -4,7 +4,8 @@ import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Users, Phone, FileText, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Users, Phone, FileText, Search, Plus } from "lucide-react";
 import { clients } from "@/data/mock-clients";
 
 export default function ClientsPage() {
@@ -41,6 +42,10 @@ export default function ClientsPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+        <Button>
+          <Plus className="size-4" />
+          Novo Cliente
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
