@@ -2,9 +2,32 @@
 
 import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
 import { Clock, CheckCircle2, AlertTriangle, Plus } from "lucide-react";
 import { receivables, type ReceivableStatus } from "@/data/mock-receivables";
+
+const statusConfig: Record<
+  ReceivableStatus,
+  { label: string; variant: "warning" | "success" | "destructive"; icon: typeof Clock }
+> = {
+  pending: { label: "Pendente", variant: "warning", icon: Clock },
+  reconciled: { label: "Conciliado", variant: "success", icon: CheckCircle2 },
+  overdue: { label: "Vencido", variant: "destructive", icon: AlertTriangle },
+};
+
+function formatDate(dateStr: string) {
+  const [year, month, day] = dateStr.split("-");
+  return `${day}/${month}/${year}`;
+}
 
 function formatCurrency(cents: number) {
   return (cents / 100).toLocaleString("pt-BR", {
@@ -110,6 +133,43 @@ export default function ReceivablesPage() {
           Nova Conta a Receber
         </Button>
       </div>
+
+      <Card>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Descrição</TableHead>
+              <TableHead>Cliente</TableHead>
+              <TableHead>Valor</TableHead>
+              <TableHead>Vencimento</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filtered.map((r) => {
+              const config = statusConfig[r.status];
+              const StatusIcon = config.icon;
+
+              return (
+                <TableRow key={r.id}>
+                  <TableCell className="font-medium">{r.description}</TableCell>
+                  <TableCell>{r.clientName}</TableCell>
+                  <TableCell className="font-semibold text-primary">
+                    {formatCurrency(r.amount)}
+                  </TableCell>
+                  <TableCell>{formatDate(r.dueDate)}</TableCell>
+                  <TableCell>
+                    <Badge variant={config.variant} className="gap-1">
+                      <StatusIcon className="size-3" />
+                      {config.label}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </Card>
     </div>
   );
 }
