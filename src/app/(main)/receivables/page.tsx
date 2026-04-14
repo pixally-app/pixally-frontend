@@ -114,8 +114,8 @@ export default function ReceivablesPage() {
         </Card>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2">
           {filters.map((f) => (
             <Button
               key={f.value}
@@ -128,7 +128,7 @@ export default function ReceivablesPage() {
           ))}
         </div>
 
-        <Button>
+        <Button className="w-full sm:w-auto">
           <Plus className="size-4" />
           Nova Conta a Receber
         </Button>
@@ -141,8 +141,8 @@ export default function ReceivablesPage() {
               <TableHead>Descrição</TableHead>
               <TableHead>Cliente</TableHead>
               <TableHead>Valor</TableHead>
-              <TableHead>Vencimento</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead className="hidden sm:table-cell">Vencimento</TableHead>
+              <TableHead className="hidden sm:table-cell">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -157,8 +157,8 @@ export default function ReceivablesPage() {
                   <TableCell className="font-semibold text-primary">
                     {formatCurrency(r.amount)}
                   </TableCell>
-                  <TableCell>{formatDate(r.dueDate)}</TableCell>
-                  <TableCell>
+                  <TableCell className="hidden sm:table-cell">{formatDate(r.dueDate)}</TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     <Badge variant={config.variant} className="gap-1">
                       <StatusIcon className="size-3" />
                       {config.label}
