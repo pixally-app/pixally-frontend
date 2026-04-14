@@ -139,7 +139,7 @@ export default function ReceiptDetailsPage({
           )}
 
           <Card>
-            <CardHeader className="flex-row items-center justify-between">
+            <CardHeader className="flex-row items-center justify-between space-y-0">
               <CardTitle className="text-lg font-bold">
                 Dados do Pagador
               </CardTitle>
@@ -192,6 +192,7 @@ export default function ReceiptDetailsPage({
                   <dt className="text-sm text-muted-foreground">Nome</dt>
                   {isEditing ? (
                     <Input
+                      aria-label="Nome"
                       className="w-[60%] h-8 text-sm"
                       value={payerData.clientName}
                       onChange={(e) =>
@@ -206,6 +207,7 @@ export default function ReceiptDetailsPage({
                   <dt className="text-sm text-muted-foreground">Agência</dt>
                   {isEditing ? (
                     <Input
+                      aria-label="Agência"
                       className="w-[60%] h-8 text-sm"
                       value={payerData.agency}
                       onChange={(e) =>
@@ -220,6 +222,7 @@ export default function ReceiptDetailsPage({
                   <dt className="text-sm text-muted-foreground">Conta</dt>
                   {isEditing ? (
                     <Input
+                      aria-label="Conta"
                       className="w-[60%] h-8 text-sm"
                       value={payerData.account}
                       onChange={(e) =>
@@ -234,6 +237,7 @@ export default function ReceiptDetailsPage({
                   <dt className="text-sm text-muted-foreground">CPF/CNPJ</dt>
                   {isEditing ? (
                     <Input
+                      aria-label="CPF/CNPJ"
                       className="w-[60%] h-8 text-sm"
                       value={payerData.cpfCnpj}
                       onChange={(e) =>
@@ -248,6 +252,7 @@ export default function ReceiptDetailsPage({
                   <dt className="text-sm text-muted-foreground">Banco</dt>
                   {isEditing ? (
                     <Input
+                      aria-label="Banco"
                       className="w-[60%] h-8 text-sm"
                       value={payerData.clientBank}
                       onChange={(e) =>
@@ -262,6 +267,7 @@ export default function ReceiptDetailsPage({
                   <dt className="text-sm text-muted-foreground">Valor</dt>
                   {isEditing ? (
                     <Input
+                      aria-label="Valor"
                       className="w-[60%] h-8 text-sm"
                       value={payerData.amount}
                       onChange={(e) =>
@@ -278,6 +284,7 @@ export default function ReceiptDetailsPage({
                   <dt className="text-sm text-muted-foreground">Descrição</dt>
                   {isEditing ? (
                     <Input
+                      aria-label="Descrição"
                       className="w-[60%] h-8 text-sm"
                       value={payerData.description}
                       onChange={(e) =>

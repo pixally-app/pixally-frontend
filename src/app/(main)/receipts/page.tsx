@@ -75,6 +75,7 @@ export default function ReceiptsPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar por cliente ou valor..."
+                aria-label="Buscar por cliente ou valor"
                 className="pl-9"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
