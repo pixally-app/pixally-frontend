@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { Clock, CheckCircle2, AlertTriangle, Plus, ChevronRight } from "lucide-react";
 import { receivables, type ReceivableStatus } from "@/data/mock-receivables";
+import { ReceivableFormDialog } from "@/components/receivables/receivable-form-dialog";
 
 const statusConfig: Record<
   ReceivableStatus,
@@ -130,10 +131,18 @@ export default function ReceivablesPage() {
           ))}
         </div>
 
-        <Button className="w-full sm:w-auto">
-          <Plus className="size-4" />
-          Nova Conta a Receber
-        </Button>
+        <ReceivableFormDialog
+          trigger={
+            <Button className="w-full sm:w-auto">
+              <Plus className="size-4" />
+              Nova Conta a Receber
+            </Button>
+          }
+          onSubmit={(data) => {
+            // TODO: integrar com API
+            console.log(data);
+          }}
+        />
       </div>
 
       <Card>
