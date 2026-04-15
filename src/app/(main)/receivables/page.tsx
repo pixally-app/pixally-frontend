@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,6 +47,7 @@ const filters = [
 type FilterValue = (typeof filters)[number]["value"];
 
 export default function ReceivablesPage() {
+  const router = useRouter();
   const [filter, setFilter] = useState<FilterValue>("all");
 
   const filtered = useMemo(() => {
@@ -153,11 +154,13 @@ export default function ReceivablesPage() {
               const StatusIcon = config.icon;
 
               return (
-                <TableRow key={r.id} className="cursor-pointer group">
+                <TableRow
+                  key={r.id}
+                  className="cursor-pointer group"
+                  onClick={() => router.push(`/receivables/${r.id}`)}
+                >
                   <TableCell className="font-medium">
-                    <Link href={`/receivables/${r.id}`} className="block">
-                      {r.description}
-                    </Link>
+                    {r.description}
                   </TableCell>
                   <TableCell>{r.clientName}</TableCell>
                   <TableCell className="font-semibold text-primary">
