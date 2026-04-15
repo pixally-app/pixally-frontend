@@ -72,7 +72,7 @@ export function ReceivableFormDialog({
   const amount = watch("amount");
   const installments = watch("installments");
 
-  const amountNumber = parseFloat((amount || "").replace(",", ".")) || 0;
+  const amountNumber = parseFloat((amount || "").replace(/\./g, "").replace(",", ".")) || 0;
   const installmentValue =
     isInstallment && installments > 1 ? amountNumber / installments : 0;
 
@@ -180,9 +180,10 @@ export function ReceivableFormDialog({
                 id="receivable-installment"
                 checked={isInstallment}
                 onCheckedChange={(checked) => {
-                  setValue("isInstallment", checked === true);
-                  if (!checked) {
-                    setValue("installments", 1);
+                  const isChecked = checked === true;
+                  setValue("isInstallment", isChecked, { shouldValidate: true });
+                  if (!isChecked) {
+                    setValue("installments", 1, { shouldValidate: true });
                   }
                 }}
               />

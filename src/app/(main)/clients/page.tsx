@@ -9,13 +9,7 @@ import { Users, Phone, FileText, Search, Plus, Pencil, Trash2 } from "lucide-rea
 import { clients } from "@/data/mock-clients";
 import { ClientFormDialog } from "@/components/clients/client-form-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-
-function formatCurrency(cents: number) {
-  return (cents / 100).toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
-}
+import { formatCurrency } from "@/lib/formatters";
 
 export default function ClientsPage() {
   const [search, setSearch] = useState("");

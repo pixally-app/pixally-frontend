@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { receipts, statusConfig, statusDescription } from "@/data/mock-receipts";
 import { receivables } from "@/data/mock-receivables";
+import { formatCurrency } from "@/lib/formatters";
 
 const statusBgColor: Record<string, string> = {
   conciliado: "bg-success/10",
@@ -53,6 +54,9 @@ export default function ReceiptDetailsPage({
     );
   }
 
+  const linkedReceivable = receipt.receivableId
+    ? receivables.find((r) => r.id === receipt.receivableId)
+    : undefined;
   const status = statusConfig[receipt.status];
 
   return (
@@ -118,21 +122,18 @@ export default function ReceiptDetailsPage({
             </CardContent>
           </Card>
 
-          {receipt.receivableId && (() => {
-            const receivable = receivables.find((r) => r.id === receipt.receivableId);
-            if (!receivable) return null;
-            return (
+          {linkedReceivable && (
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 text-success font-semibold text-sm mb-1">
                     <span>Conta a Receber Vinculada</span>
                   </div>
-                  <p className="font-semibold">{receivable.description}</p>
+                  <p className="font-semibold">{linkedReceivable.description}</p>
                   <p className="text-sm text-muted-foreground">
-                    Cliente: {receivable.clientName} | Valor: {(receivable.amount / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                    Cliente: {linkedReceivable.clientName} | Valor: {formatCurrency(linkedReceivable.amount)}
                   </p>
                   <Link
-                    href={`/receivables/${receivable.id}`}
+                    href={`/receivables/${linkedReceivable.id}`}
                     className="inline-flex items-center gap-1 text-sm font-medium text-primary mt-2"
                   >
                     Ver conta a receber
@@ -140,8 +141,7 @@ export default function ReceiptDetailsPage({
                   </Link>
                 </CardContent>
               </Card>
-            );
-          })()}
+          )}
 
           <Card>
             <CardHeader className="flex-row items-center justify-between space-y-0">

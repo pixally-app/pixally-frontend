@@ -16,6 +16,7 @@ import {
 import { Clock, CheckCircle2, AlertTriangle, Plus, ChevronRight } from "lucide-react";
 import { receivables, type ReceivableStatus } from "@/data/mock-receivables";
 import { ReceivableFormDialog } from "@/components/receivables/receivable-form-dialog";
+import { formatCurrency, formatDate } from "@/lib/formatters";
 
 const statusConfig: Record<
   ReceivableStatus,
@@ -25,18 +26,6 @@ const statusConfig: Record<
   reconciled: { label: "Conciliado", variant: "success", icon: CheckCircle2 },
   overdue: { label: "Vencido", variant: "destructive", icon: AlertTriangle },
 };
-
-function formatDate(dateStr: string) {
-  const [year, month, day] = dateStr.split("-");
-  return `${day}/${month}/${year}`;
-}
-
-function formatCurrency(cents: number) {
-  return (cents / 100).toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
-}
 
 const filters = [
   { label: "Todos", value: "all" },
@@ -165,8 +154,16 @@ export default function ReceivablesPage() {
               return (
                 <TableRow
                   key={r.id}
-                  className="cursor-pointer group"
+                  className="cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  role="link"
+                  tabIndex={0}
                   onClick={() => router.push(`/receivables/${r.id}`)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      router.push(`/receivables/${r.id}`);
+                    }
+                  }}
                 >
                   <TableCell className="font-medium">
                     {r.description}

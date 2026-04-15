@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { receivables, type ReceivableStatus } from "@/data/mock-receivables";
 import { receipts, statusConfig as receiptStatusConfig } from "@/data/mock-receipts";
+import { formatCurrency, formatDate } from "@/lib/formatters";
 
 const statusConfig: Record<
   ReceivableStatus,
@@ -24,18 +25,6 @@ const statusConfig: Record<
   reconciled: { label: "Conciliado", variant: "success", icon: CheckCircle2 },
   overdue: { label: "Vencido", variant: "destructive", icon: AlertTriangle },
 };
-
-function formatDate(dateStr: string) {
-  const [year, month, day] = dateStr.split("-");
-  return `${day}/${month}/${year}`;
-}
-
-function formatCurrency(cents: number) {
-  return (cents / 100).toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
-}
 
 export default function ReceivableDetailsPage({
   params,
@@ -60,9 +49,7 @@ export default function ReceivableDetailsPage({
     );
   }
 
-  const linkedReceipts = receipts.filter((r) =>
-    receivable.linkedReceiptIds.includes(r.id)
-  );
+  const linkedReceipts = receipts.filter((r) => r.receivableId === receivable.id);
   const status = statusConfig[receivable.status];
   const StatusIcon = status.icon;
   const remaining = receivable.amount - receivable.amountPaid;
