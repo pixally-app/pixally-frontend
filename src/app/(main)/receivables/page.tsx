@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,7 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
-import { Clock, CheckCircle2, AlertTriangle, Plus } from "lucide-react";
+import { Clock, CheckCircle2, AlertTriangle, Plus, ChevronRight } from "lucide-react";
 import { receivables, type ReceivableStatus } from "@/data/mock-receivables";
 
 const statusConfig: Record<
@@ -143,6 +144,7 @@ export default function ReceivablesPage() {
               <TableHead>Valor</TableHead>
               <TableHead className="hidden sm:table-cell">Vencimento</TableHead>
               <TableHead className="hidden sm:table-cell">Status</TableHead>
+              <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -151,8 +153,12 @@ export default function ReceivablesPage() {
               const StatusIcon = config.icon;
 
               return (
-                <TableRow key={r.id}>
-                  <TableCell className="font-medium">{r.description}</TableCell>
+                <TableRow key={r.id} className="cursor-pointer group">
+                  <TableCell className="font-medium">
+                    <Link href={`/receivables/${r.id}`} className="block">
+                      {r.description}
+                    </Link>
+                  </TableCell>
                   <TableCell>{r.clientName}</TableCell>
                   <TableCell className="font-semibold text-primary">
                     {formatCurrency(r.amount)}
@@ -163,6 +169,9 @@ export default function ReceivablesPage() {
                       <StatusIcon className="size-3" />
                       {config.label}
                     </Badge>
+                  </TableCell>
+                  <TableCell className="w-10 pr-4">
+                    <ChevronRight className="size-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                   </TableCell>
                 </TableRow>
               );

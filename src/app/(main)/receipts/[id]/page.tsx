@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { receipts, statusConfig, statusDescription } from "@/data/mock-receipts";
+import { receivables } from "@/data/mock-receivables";
 
 const statusBgColor: Record<string, string> = {
   conciliado: "bg-success/10",
@@ -117,26 +118,30 @@ export default function ReceiptDetailsPage({
             </CardContent>
           </Card>
 
-          {receipt.linkedReceivable && (
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-success font-semibold text-sm mb-1">
-                  <span>Conta a Receber Vinculada</span>
-                </div>
-                <p className="font-semibold">{receipt.linkedReceivable.title}</p>
-                <p className="text-sm text-muted-foreground">
-                  Cliente: {receipt.linkedReceivable.client} | Valor: {receipt.linkedReceivable.amount}
-                </p>
-                <Link
-                  href="/receivables"
-                  className="inline-flex items-center gap-1 text-sm font-medium text-primary mt-2"
-                >
-                  Ver conta a receber
-                  <ArrowRight className="size-4" />
-                </Link>
-              </CardContent>
-            </Card>
-          )}
+          {receipt.receivableId && (() => {
+            const receivable = receivables.find((r) => r.id === receipt.receivableId);
+            if (!receivable) return null;
+            return (
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 text-success font-semibold text-sm mb-1">
+                    <span>Conta a Receber Vinculada</span>
+                  </div>
+                  <p className="font-semibold">{receivable.description}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Cliente: {receivable.clientName} | Valor: {(receivable.amount / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                  </p>
+                  <Link
+                    href={`/receivables/${receivable.id}`}
+                    className="inline-flex items-center gap-1 text-sm font-medium text-primary mt-2"
+                  >
+                    Ver conta a receber
+                    <ArrowRight className="size-4" />
+                  </Link>
+                </CardContent>
+              </Card>
+            );
+          })()}
 
           <Card>
             <CardHeader className="flex-row items-center justify-between space-y-0">

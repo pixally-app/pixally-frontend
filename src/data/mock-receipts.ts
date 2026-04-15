@@ -19,11 +19,7 @@ export interface Receipt {
   receiverBank: string;
   receiverCpfCnpj: string;
   receiverPixId: string;
-  linkedReceivable?: {
-    title: string;
-    client: string;
-    amount: string;
-  };
+  receivableId?: string;
 }
 
 export const statusConfig: Record<ReceiptStatus, { label: string; variant: "success" | "destructive" | "warning" | "default" | "secondary" }> = {
@@ -50,7 +46,7 @@ export const receipts: Receipt[] = [
     cpfCnpj: "***.916.152.***", description: "Pagamento referente ao serviço de automação",
     receiverName: "Melo Automação e Sistemas", receiverBank: "BCO DO BRASIL S.A.",
     receiverCpfCnpj: "12.345.678/0001-90", receiverPixId: "F345678901234567890123456789018C",
-    linkedReceivable: { title: "Instalação elétrica", client: "João Silva", amount: "R$ 150,00" },
+    receivableId: "1",
   },
   {
     id: "2", date: "26/02/2026", time: "15:45", clientName: "Maria Santos", clientBank: "Inter",
@@ -59,7 +55,7 @@ export const receipts: Receipt[] = [
     cpfCnpj: "***.916.152.***", description: "Pagamento referente ao serviço de automação",
     receiverName: "Melo Automação e Sistemas", receiverBank: "BCO DO BRASIL S.A.",
     receiverCpfCnpj: "12.345.678/0001-90", receiverPixId: "F345678901234567890123456789018C",
-    linkedReceivable: { title: "Instalação elétrica", client: "Maria Santos", amount: "R$ 200,50" },
+    receivableId: "2",
   },
   {
     id: "3", date: "26/02/2026", time: "16:20", clientName: "Pedro Costa", clientBank: "Nubank",
@@ -76,7 +72,7 @@ export const receipts: Receipt[] = [
     cpfCnpj: "***.456.789.***", description: "Serviço de consultoria",
     receiverName: "Melo Automação e Sistemas", receiverBank: "BCO DO BRASIL S.A.",
     receiverCpfCnpj: "12.345.678/0001-90", receiverPixId: "F345678901234567890123456789018C",
-    linkedReceivable: { title: "Consultoria técnica", client: "Ana Paula Oliveira", amount: "R$ 320,00" },
+    receivableId: "5",
   },
   {
     id: "5", date: "26/02/2026", time: "18:00", clientName: "Carlos Mendes", clientBank: "Banco do Brasil",
