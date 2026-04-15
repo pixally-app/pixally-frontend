@@ -123,61 +123,6 @@ export default function ReceivableDetailsPage({
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-bold">PIX Vinculados</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {linkedReceipts.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Data</TableHead>
-                      <TableHead>Valor</TableHead>
-                      <TableHead className="hidden sm:table-cell">Status</TableHead>
-                      <TableHead>Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {linkedReceipts.map((receipt) => {
-                      const rStatus = receiptStatusConfig[receipt.status];
-                      return (
-                        <TableRow key={receipt.id}>
-                          <TableCell className="text-sm">
-                            {receipt.date}, {receipt.time}
-                          </TableCell>
-                          <TableCell className="text-sm font-semibold text-primary">
-                            {receipt.amount}
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            <Badge variant={rStatus.variant} className="gap-1">
-                              {rStatus.label}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Link
-                              href={`/receipts/${receipt.id}`}
-                              className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-                            >
-                              Ver comprovante
-                              <ArrowRight className="size-3.5" />
-                            </Link>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <FileText className="size-10 text-muted-foreground mb-3" />
-                  <p className="text-sm text-muted-foreground">
-                    Nenhum PIX vinculado a esta conta a receber.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </div>
 
         <div className="space-y-6">
@@ -217,6 +162,62 @@ export default function ReceivableDetailsPage({
           </Card>
         </div>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-bold">PIX Vinculados</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {linkedReceipts.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Valor</TableHead>
+                  <TableHead className="hidden sm:table-cell">Status</TableHead>
+                  <TableHead>Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {linkedReceipts.map((receipt) => {
+                  const rStatus = receiptStatusConfig[receipt.status];
+                  return (
+                    <TableRow key={receipt.id}>
+                      <TableCell className="text-sm">
+                        {receipt.date}, {receipt.time}
+                      </TableCell>
+                      <TableCell className="text-sm font-semibold text-primary">
+                        {receipt.amount}
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <Badge variant={rStatus.variant} className="gap-1">
+                          {rStatus.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Link
+                          href={`/receipts/${receipt.id}`}
+                          className="inline-flex items-center gap-1 text-sm font-medium text-primary"
+                        >
+                          Ver comprovante
+                          <ArrowRight className="size-3.5" />
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <FileText className="size-10 text-muted-foreground mb-3" />
+              <p className="text-sm text-muted-foreground">
+                Nenhum PIX vinculado a esta conta a receber.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
