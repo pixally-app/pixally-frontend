@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { receivableSchema, type ReceivableFormValues } from "@/schemas/receivable";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -34,15 +37,6 @@ export interface ReceivableFormData {
   dueDate: string;
 }
 
-const emptyForm: ReceivableFormData = {
-  serviceName: "",
-  description: "",
-  clientId: "",
-  amount: "",
-  installments: 1,
-  dueDate: "",
-};
-
 interface ReceivableFormDialogProps {
   trigger: React.ReactNode;
   onSubmit: (data: ReceivableFormData) => void;
@@ -53,28 +47,53 @@ export function ReceivableFormDialog({
   onSubmit,
 }: ReceivableFormDialogProps) {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<ReceivableFormData>(emptyForm);
-  const [isInstallment, setIsInstallment] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm<ReceivableFormValues>({
+    resolver: zodResolver(receivableSchema),
+    defaultValues: {
+      serviceName: "",
+      description: "",
+      clientId: "",
+      amount: "",
+      dueDate: "",
+      isInstallment: false,
+      installments: 1,
+    },
+  });
+
+  const isInstallment = watch("isInstallment");
+  const amount = watch("amount");
+  const installments = watch("installments");
+
+  const amountNumber = parseFloat((amount || "").replace(",", ".")) || 0;
+  const installmentValue =
+    isInstallment && installments > 1 ? amountNumber / installments : 0;
 
   function handleOpenChange(value: boolean) {
     setOpen(value);
     if (value) {
-      setForm(emptyForm);
-      setIsInstallment(false);
+      reset();
     }
   }
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    onSubmit(form);
+  function onFormSubmit(data: ReceivableFormValues) {
+    onSubmit({
+      serviceName: data.serviceName,
+      description: data.description ?? "",
+      clientId: data.clientId,
+      amount: data.amount,
+      installments: data.isInstallment ? data.installments : 1,
+      dueDate: data.dueDate,
+    });
     setOpen(false);
   }
-
-  const amountNumber = parseFloat(form.amount.replace(",", ".")) || 0;
-  const installmentValue =
-    isInstallment && form.installments > 1
-      ? amountNumber / form.installments
-      : 0;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -87,19 +106,18 @@ export function ReceivableFormDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onFormSubmit)}>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label htmlFor="receivable-service">Nome do Serviço</Label>
               <Input
                 id="receivable-service"
                 placeholder="Ex: Manutenção ar condicionado"
-                value={form.serviceName}
-                onChange={(e) =>
-                  setForm({ ...form, serviceName: e.target.value })
-                }
-                required
+                {...register("serviceName")}
               />
+              {errors.serviceName && (
+                <p className="text-sm text-destructive">{errors.serviceName.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -107,20 +125,15 @@ export function ReceivableFormDialog({
               <Textarea
                 id="receivable-description"
                 placeholder="Detalhes do serviço realizado"
-                value={form.description}
-                onChange={(e) =>
-                  setForm({ ...form, description: e.target.value })
-                }
+                {...register("description")}
               />
             </div>
 
             <div className="space-y-2">
               <Label>Cliente</Label>
               <Select
-                value={form.clientId}
-                onValueChange={(value) =>
-                  setForm({ ...form, clientId: value })
-                }
+                value={watch("clientId")}
+                onValueChange={(value) => setValue("clientId", value, { shouldValidate: true })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o cliente" />
@@ -133,6 +146,9 @@ export function ReceivableFormDialog({
                   ))}
                 </SelectContent>
               </Select>
+              {errors.clientId && (
+                <p className="text-sm text-destructive">{errors.clientId.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -140,12 +156,11 @@ export function ReceivableFormDialog({
               <Input
                 id="receivable-amount"
                 placeholder="0,00"
-                value={form.amount}
-                onChange={(e) =>
-                  setForm({ ...form, amount: e.target.value })
-                }
-                required
+                {...register("amount")}
               />
+              {errors.amount && (
+                <p className="text-sm text-destructive">{errors.amount.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -153,12 +168,11 @@ export function ReceivableFormDialog({
               <Input
                 id="receivable-dueDate"
                 type="date"
-                value={form.dueDate}
-                onChange={(e) =>
-                  setForm({ ...form, dueDate: e.target.value })
-                }
-                required
+                {...register("dueDate")}
               />
+              {errors.dueDate && (
+                <p className="text-sm text-destructive">{errors.dueDate.message}</p>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -166,9 +180,9 @@ export function ReceivableFormDialog({
                 id="receivable-installment"
                 checked={isInstallment}
                 onCheckedChange={(checked) => {
-                  setIsInstallment(checked === true);
+                  setValue("isInstallment", checked === true);
                   if (!checked) {
-                    setForm({ ...form, installments: 1 });
+                    setValue("installments", 1);
                   }
                 }}
               />
@@ -187,17 +201,17 @@ export function ReceivableFormDialog({
                   type="number"
                   min={2}
                   placeholder="2"
-                  value={form.installments > 1 ? form.installments : ""}
+                  value={installments > 1 ? installments : ""}
                   onChange={(e) =>
-                    setForm({
-                      ...form,
-                      installments: parseInt(e.target.value) || 2,
-                    })
+                    setValue("installments", parseInt(e.target.value) || 2, { shouldValidate: true })
                   }
                 />
+                {errors.installments && (
+                  <p className="text-sm text-destructive">{errors.installments.message}</p>
+                )}
                 {installmentValue > 0 && (
                   <p className="text-sm text-muted-foreground">
-                    {form.installments}x de{" "}
+                    {installments}x de{" "}
                     <span className="font-medium text-foreground">
                       {installmentValue.toLocaleString("pt-BR", {
                         style: "currency",
