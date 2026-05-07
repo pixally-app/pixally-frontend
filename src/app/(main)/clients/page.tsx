@@ -20,8 +20,8 @@ export default function ClientsPage() {
     return clients.filter(
       (c) =>
         c.name.toLowerCase().includes(term) ||
-        c.cpfCnpj.includes(term) ||
-        c.phone.includes(term)
+        c.document.includes(term) ||
+        c.phones.includes(term)
     );
   }, [search]);
 
@@ -83,7 +83,7 @@ export default function ClientsPage() {
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {client.cpfCnpj}
+                      {client.document}
                     </p>
                   </div>
                 </div>
@@ -91,7 +91,7 @@ export default function ClientsPage() {
                 <div className="space-y-1.5 text-sm text-muted-foreground mb-4">
                   <div className="flex items-center gap-2">
                     <Phone className="size-3.5" />
-                    <span>{client.phone}</span>
+                    <span>{client.phones}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <FileText className="size-3.5" />
@@ -127,8 +127,8 @@ export default function ClientsPage() {
                       defaultValues={{
                         name: client.name,
                         nickname: "",
-                        cpfCnpj: client.cpfCnpj,
-                        phone: client.phone,
+                        document: client.document,
+                        phones: client.phones,
                         street: "",
                         neighborhood: "",
                         number: "",

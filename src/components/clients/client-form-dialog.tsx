@@ -46,8 +46,8 @@ export function ClientFormDialog({
     defaultValues: defaultValues ?? {
       name: "",
       nickname: "",
-      cpfCnpj: "",
-      phone: "",
+      document: "",
+      phones: "",
       street: "",
       neighborhood: "",
       number: "",
@@ -60,8 +60,8 @@ export function ClientFormDialog({
       reset(defaultValues ?? {
         name: "",
         nickname: "",
-        cpfCnpj: "",
-        phone: "",
+        document: "",
+        phones: "",
         street: "",
         neighborhood: "",
         number: "",
@@ -105,26 +105,26 @@ export function ClientFormDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="client-cpfCnpj">CPF/CNPJ</Label>
+              <Label htmlFor="client-document">CPF/CNPJ</Label>
               <Input
-                id="client-cpfCnpj"
+                id="client-document"
                 placeholder="000.000.000-00"
-                aria-invalid={!!errors.cpfCnpj}
-                aria-describedby={errors.cpfCnpj ? "client-cpfCnpj-error" : undefined}
-                {...register("cpfCnpj")}
+                aria-invalid={!!errors.document}
+                aria-describedby={errors.document ? "client-document-error" : undefined}
+                {...register("document")}
               />
-              <FormErrorMessage id="client-cpfCnpj-error" message={errors.cpfCnpj?.message} />
+              <FormErrorMessage id="client-document-error" message={errors.document?.message} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="client-phone">Telefone</Label>
               <Input
                 id="client-phone"
                 placeholder="(00) 00000-0000"
-                aria-invalid={!!errors.phone}
-                aria-describedby={errors.phone ? "client-phone-error" : undefined}
-                {...register("phone")}
+                aria-invalid={!!errors.phones}
+                aria-describedby={errors.phones ? "client-phone-error" : undefined}
+                {...register("phones")}
               />
-              <FormErrorMessage id="client-phone-error" message={errors.phone?.message} />
+              <FormErrorMessage id="client-phone-error" message={errors.phones?.message} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="client-street">Rua/Avenida</Label>

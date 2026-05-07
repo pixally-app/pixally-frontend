@@ -7,7 +7,7 @@ export const clientSchema = z.object({
     .min(1, "Nome é obrigatório")
     .min(3, "Nome deve ter pelo menos 3 caracteres"),
   nickname: z.string().trim(),
-  cpfCnpj: z
+  document: z
     .string()
     .min(1, "CPF/CNPJ é obrigatório")
     .refine(
@@ -17,7 +17,7 @@ export const clientSchema = z.object({
       },
       { message: "Digite um CPF ou CNPJ válido" }
     ),
-  phone: z
+  phones: z
     .string()
     .min(1, "Telefone é obrigatório")
     .refine(
