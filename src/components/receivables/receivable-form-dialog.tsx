@@ -28,14 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { clients } from "@/data/mock-clients";
 
-export interface ReceivableFormData {
-  serviceName: string;
-  description: string;
-  clientId: string;
-  amount: string;
-  installments: number;
-  dueDate: string;
-}
+export type ReceivableFormData = Omit<ReceivableFormValues, "isInstallment">;
 
 interface ReceivableFormDialogProps {
   trigger: React.ReactNode;
