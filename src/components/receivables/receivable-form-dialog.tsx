@@ -26,6 +26,7 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import { FormErrorMessage } from "@/components/ui/form-error-message";
 import { clients } from "@/data/mock-clients";
 
 export type ReceivableFormData = Omit<ReceivableFormValues, "isInstallment">;
@@ -110,9 +111,7 @@ export function ReceivableFormDialog({
                 aria-describedby={errors.serviceName ? "receivable-service-error" : undefined}
                 {...register("serviceName")}
               />
-              {errors.serviceName && (
-                <p id="receivable-service-error" className="text-sm text-destructive">{errors.serviceName.message}</p>
-              )}
+              <FormErrorMessage id="receivable-service-error" message={errors.serviceName?.message} />
             </div>
 
             <div className="space-y-2">
@@ -144,9 +143,7 @@ export function ReceivableFormDialog({
                   ))}
                 </SelectContent>
               </Select>
-              {errors.clientId && (
-                <p id="receivable-client-error" className="text-sm text-destructive">{errors.clientId.message}</p>
-              )}
+              <FormErrorMessage id="receivable-client-error" message={errors.clientId?.message} />
             </div>
 
             <div className="space-y-2">
@@ -158,9 +155,7 @@ export function ReceivableFormDialog({
                 aria-describedby={errors.amount ? "receivable-amount-error" : undefined}
                 {...register("amount")}
               />
-              {errors.amount && (
-                <p id="receivable-amount-error" className="text-sm text-destructive">{errors.amount.message}</p>
-              )}
+              <FormErrorMessage id="receivable-amount-error" message={errors.amount?.message} />
             </div>
 
             <div className="space-y-2">
@@ -172,9 +167,7 @@ export function ReceivableFormDialog({
                 aria-describedby={errors.dueDate ? "receivable-dueDate-error" : undefined}
                 {...register("dueDate")}
               />
-              {errors.dueDate && (
-                <p id="receivable-dueDate-error" className="text-sm text-destructive">{errors.dueDate.message}</p>
-              )}
+              <FormErrorMessage id="receivable-dueDate-error" message={errors.dueDate?.message} />
             </div>
 
             <div className="flex items-center gap-2">
@@ -211,9 +204,7 @@ export function ReceivableFormDialog({
                     setValue("installments", parseInt(e.target.value) || 2, { shouldValidate: true })
                   }
                 />
-                {errors.installments && (
-                  <p id="receivable-installments-error" className="text-sm text-destructive">{errors.installments.message}</p>
-                )}
+                <FormErrorMessage id="receivable-installments-error" message={errors.installments?.message} />
                 {installmentValue > 0 && (
                   <p className="text-sm text-muted-foreground">
                     {installments}x de{" "}

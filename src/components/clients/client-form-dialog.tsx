@@ -7,6 +7,7 @@ import { clientSchema, type ClientFormValues } from "@/schemas/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { FormErrorMessage } from "@/components/ui/form-error-message";
 import {
   Dialog,
   DialogTrigger,
@@ -93,9 +94,7 @@ export function ClientFormDialog({
                 aria-describedby={errors.name ? "client-name-error" : undefined}
                 {...register("name")}
               />
-              {errors.name && (
-                <p id="client-name-error" className="text-sm text-destructive">{errors.name.message}</p>
-              )}
+              <FormErrorMessage id="client-name-error" message={errors.name?.message} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="client-nickname">Apelido</Label>
@@ -114,9 +113,7 @@ export function ClientFormDialog({
                 aria-describedby={errors.cpfCnpj ? "client-cpfCnpj-error" : undefined}
                 {...register("cpfCnpj")}
               />
-              {errors.cpfCnpj && (
-                <p id="client-cpfCnpj-error" className="text-sm text-destructive">{errors.cpfCnpj.message}</p>
-              )}
+              <FormErrorMessage id="client-cpfCnpj-error" message={errors.cpfCnpj?.message} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="client-phone">Telefone</Label>
@@ -127,9 +124,7 @@ export function ClientFormDialog({
                 aria-describedby={errors.phone ? "client-phone-error" : undefined}
                 {...register("phone")}
               />
-              {errors.phone && (
-                <p id="client-phone-error" className="text-sm text-destructive">{errors.phone.message}</p>
-              )}
+              <FormErrorMessage id="client-phone-error" message={errors.phone?.message} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="client-street">Rua/Avenida</Label>
