@@ -26,16 +26,18 @@ import {
   MessageCircle,
   ArrowUpFromLine,
   Eye,
+  FileText,
 } from "lucide-react";
 import Link from "next/link";
 import { receipts, statusConfig } from "@/data/mock-receipts";
+import { formatCurrency, formatDateTime } from "@/lib/formatters";
 
-const sourceIcon = {
+const originIcon = {
   whatsapp: <MessageCircle className="size-4" />,
   manual: <ArrowUpFromLine className="size-4" />,
 };
 
-const sourceLabel = {
+const originLabel = {
   whatsapp: "WhatsApp",
   manual: "Manual",
 };
@@ -43,21 +45,21 @@ const sourceLabel = {
 export default function ReceiptsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const [originFilter, setOriginFilter] = useState<string>("all");
 
   const filtered = useMemo(() => {
     return receipts.filter((r) => {
       const matchesSearch =
         !search ||
         r.clientName.toLowerCase().includes(search.toLowerCase()) ||
-        r.amount.includes(search);
+        formatCurrency(r.depositAmount).includes(search);
 
       const matchesStatus = statusFilter === "all" || r.status === statusFilter;
-      const matchesSource = sourceFilter === "all" || r.source === sourceFilter;
+      const matchesOrigin = originFilter === "all" || r.origin === originFilter;
 
-      return matchesSearch && matchesStatus && matchesSource;
+      return matchesSearch && matchesStatus && matchesOrigin;
     });
-  }, [search, statusFilter, sourceFilter]);
+  }, [search, statusFilter, originFilter]);
 
   return (
     <div className="space-y-6">
@@ -97,7 +99,7 @@ export default function ReceiptsPage() {
                 </SelectContent>
               </Select>
 
-              <Select value={sourceFilter} onValueChange={setSourceFilter}>
+              <Select value={originFilter} onValueChange={setOriginFilter}>
                 <SelectTrigger className="w-[140px]">
                   <SelectValue placeholder="Origem" />
                 </SelectTrigger>
@@ -134,46 +136,58 @@ export default function ReceiptsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((receipt) => {
-              const status = statusConfig[receipt.status];
-              return (
-                <TableRow key={receipt.id}>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">{receipt.date}</p>
-                      <p className="text-sm text-muted-foreground">{receipt.time}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">{receipt.clientName}</p>
-                      <p className="text-sm text-muted-foreground">{receipt.clientBank}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className="font-semibold text-success">{receipt.amount}</span>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={status.variant}>{status.label}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      {sourceIcon[receipt.source]}
-                      <span className="text-sm">{sourceLabel[receipt.source]}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Link
-                      href={`/receipts/${receipt.id}`}
-                      className="inline-flex items-center gap-1.5 text-sm font-medium text-primary"
-                    >
-                      <Eye className="size-4" />
-                      Ver
-                    </Link>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+            {filtered.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="h-32 text-center">
+                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                    <FileText className="size-8" />
+                    <p className="text-sm">Nenhum comprovante encontrado.</p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              filtered.map((receipt) => {
+                const status = statusConfig[receipt.status];
+                const { date, time } = formatDateTime(receipt.depositDateTime);
+                return (
+                  <TableRow key={receipt.id}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{date}</p>
+                        <p className="text-sm text-muted-foreground">{time}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{receipt.clientName}</p>
+                        <p className="text-sm text-muted-foreground">{receipt.depositOriginBank}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-semibold text-success">{formatCurrency(receipt.depositAmount)}</span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={status.variant}>{status.label}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5 text-muted-foreground">
+                        {originIcon[receipt.origin]}
+                        <span className="text-sm">{originLabel[receipt.origin]}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Link
+                        href={`/receipts/${receipt.id}`}
+                        className="inline-flex items-center gap-1.5 text-sm font-medium text-primary"
+                      >
+                        <Eye className="size-4" />
+                        Ver
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
           </TableBody>
         </Table>
       </Card>

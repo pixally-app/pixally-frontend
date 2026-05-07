@@ -15,6 +15,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input, inputBaseClasses } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { FormErrorMessage } from "@/components/ui/form-error-message";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
@@ -55,11 +56,7 @@ export default function SignUpPage() {
               aria-describedby={errors.name ? "name-error" : undefined}
               {...register("name")}
             />
-            {errors.name && (
-              <p id="name-error" className="text-sm text-destructive">
-                {errors.name.message}
-              </p>
-            )}
+            <FormErrorMessage id="name-error" message={errors.name?.message} />
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -87,11 +84,7 @@ export default function SignUpPage() {
                 />
               )}
             />
-            {errors.document && (
-              <p id="document-error" className="text-sm text-destructive">
-                {errors.document.message}
-              </p>
-            )}
+            <FormErrorMessage id="document-error" message={errors.document?.message} />
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -118,11 +111,7 @@ export default function SignUpPage() {
                 />
               )}
             />
-            {errors.phone && (
-              <p id="phone-error" className="text-sm text-destructive">
-                {errors.phone.message}
-              </p>
-            )}
+            <FormErrorMessage id="phone-error" message={errors.phone?.message} />
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -136,11 +125,7 @@ export default function SignUpPage() {
               aria-describedby={errors.email ? "email-error" : undefined}
               {...register("email")}
             />
-            {errors.email && (
-              <p id="email-error" className="text-sm text-destructive">
-                {errors.email.message}
-              </p>
-            )}
+            <FormErrorMessage id="email-error" message={errors.email?.message} />
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -166,11 +151,7 @@ export default function SignUpPage() {
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            {errors.password && (
-              <p id="password-error" className="text-sm text-destructive">
-                {errors.password.message}
-              </p>
-            )}
+            <FormErrorMessage id="password-error" message={errors.password?.message} />
           </div>
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>

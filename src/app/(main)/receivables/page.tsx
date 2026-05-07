@@ -13,7 +13,7 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
-import { Clock, CheckCircle2, AlertTriangle, Plus, ChevronRight } from "lucide-react";
+import { Clock, CheckCircle2, AlertTriangle, Plus, ChevronRight, Wallet } from "lucide-react";
 import { receivables, type ReceivableStatus } from "@/data/mock-receivables";
 import { ReceivableFormDialog } from "@/components/receivables/receivable-form-dialog";
 import { formatCurrency, formatDate } from "@/lib/formatters";
@@ -51,9 +51,9 @@ export default function ReceivablesPage() {
     let overdue = 0;
 
     for (const r of receivables) {
-      if (r.status === "pending") pending += r.amount;
-      else if (r.status === "reconciled") reconciled += r.amount;
-      else if (r.status === "overdue") overdue += r.amount;
+      if (r.status === "pending") pending += r.totalAmount;
+      else if (r.status === "reconciled") reconciled += r.totalAmount;
+      else if (r.status === "overdue") overdue += r.totalAmount;
     }
 
     return { pending, reconciled, overdue };
@@ -147,44 +147,55 @@ export default function ReceivablesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((r) => {
-              const config = statusConfig[r.status];
-              const StatusIcon = config.icon;
+            {filtered.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="h-32 text-center">
+                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                    <Wallet className="size-8" />
+                    <p className="text-sm">Nenhuma conta a receber encontrada.</p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              filtered.map((r) => {
+                const config = statusConfig[r.status];
+                const StatusIcon = config.icon;
 
-              return (
-                <TableRow
-                  key={r.id}
-                  className="cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  role="link"
-                  tabIndex={0}
-                  onClick={() => router.push(`/receivables/${r.id}`)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      router.push(`/receivables/${r.id}`);
-                    }
-                  }}
-                >
-                  <TableCell className="font-medium">
-                    {r.description}
-                  </TableCell>
-                  <TableCell>{r.clientName}</TableCell>
-                  <TableCell className="font-semibold text-primary">
-                    {formatCurrency(r.amount)}
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell">{formatDate(r.dueDate)}</TableCell>
-                  <TableCell className="hidden sm:table-cell">
-                    <Badge variant={config.variant} className="gap-1">
-                      <StatusIcon className="size-3" />
-                      {config.label}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="w-10 pr-4">
-                    <ChevronRight className="size-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+                return (
+                  <TableRow
+                    key={r.id}
+                    className="cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    role="link"
+                    tabIndex={0}
+                    onClick={() => router.push(`/receivables/${r.id}`)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        router.push(`/receivables/${r.id}`);
+                      }
+                    }}
+                  >
+                    <TableCell className="font-medium">
+                      {r.descriptionService}
+                    </TableCell>
+                    <TableCell>{r.clientName}</TableCell>
+                    <TableCell className="font-semibold text-primary">
+                      {formatCurrency(r.totalAmount)}
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">{formatDate(r.dueDate)}</TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      <Badge variant={config.variant} className="gap-1">
+                        <StatusIcon className="size-3" />
+                        {config.label}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="w-10 pr-4">
+                      <ChevronRight className="size-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
           </TableBody>
         </Table>
       </Card>
