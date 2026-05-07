@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { warnings } from "@/data/mock-alerts";
 import {
   LayoutDashboard,
   Receipt,
@@ -76,7 +77,7 @@ const mainNavItems: NavItem[] = [
   { label: "Comprovantes", href: "/receipts", icon: Receipt },
   { label: "Clientes", href: "/clients", icon: Users },
   { label: "Contas a Receber", href: "/receivables", icon: Wallet },
-  { label: "Alertas", href: "/alerts", icon: Bell, badge: 3 },
+  { label: "Alertas", href: "/alerts", icon: Bell, badge: warnings.filter((w) => !w.resolved).length },
   {
     label: "WhatsApp",
     href: "/whatsapp",
