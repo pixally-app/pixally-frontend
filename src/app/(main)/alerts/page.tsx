@@ -2,9 +2,17 @@
 
 import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle } from "lucide-react";
-import { warnings, type WarningType } from "@/data/mock-alerts";
+import { AlertTriangle, Eye } from "lucide-react";
+import Link from "next/link";
+import { warnings, warningTypeConfig, type WarningType } from "@/data/mock-alerts";
+import { formatDateTime } from "@/lib/formatters";
+
+const borderColor: Record<WarningType, string> = {
+  critico: "border-destructive",
+  atencao: "border-warning",
+};
 
 const filters = [
   { label: "Todos", value: "all" },
@@ -99,6 +107,52 @@ export default function AlertsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <div className="space-y-4">
+        {filtered.map((warning) => {
+          const config = warningTypeConfig[warning.type];
+          const { date, time } = formatDateTime(warning.createdAt);
+
+          return (
+            <Card key={warning.id} className={`border-l-4 ${borderColor[warning.type]}`}>
+              <CardContent className="p-5">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className={`size-5 mt-0.5 ${warning.type === "critico" ? "text-destructive" : "text-warning"}`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge variant={config.variant}>{config.label}</Badge>
+                      <span className="text-sm text-muted-foreground">
+                        {date}, {time}
+                      </span>
+                    </div>
+                    <p className="font-semibold">{warning.message}</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      Cliente: {warning.clientName}
+                    </p>
+                    <div className="flex items-center gap-2 mt-3">
+                      <Button size="sm" asChild>
+                        <Link href={`/receipts/${warning.pixReceiptId}`}>
+                          <Eye className="size-4" />
+                          Ver Comprovante
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          // TODO: integrar com API
+                        }}
+                      >
+                        Resolver
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
     </div>
   );
 }
