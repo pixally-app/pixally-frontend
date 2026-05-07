@@ -1,9 +1,18 @@
 "use client";
 
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
-import { warnings } from "@/data/mock-alerts";
+import { warnings, type WarningType } from "@/data/mock-alerts";
+
+const filters = [
+  { label: "Todos", value: "all" },
+  { label: "Atenção", value: "atencao" },
+  { label: "Crítico", value: "critico" },
+] as const;
+
+type FilterValue = (typeof filters)[number]["value"];
 
 const summaryCards = [
   {
@@ -27,10 +36,17 @@ const summaryCards = [
 ];
 
 export default function AlertsPage() {
+  const [filter, setFilter] = useState<FilterValue>("all");
+
   const pending = useMemo(
     () => warnings.filter((w) => !w.resolved),
     []
   );
+
+  const filtered = useMemo(() => {
+    if (filter === "all") return pending;
+    return pending.filter((w) => w.type === filter);
+  }, [pending, filter]);
 
   const summary = useMemo(() => {
     let atencao = 0;
@@ -66,6 +82,23 @@ export default function AlertsPage() {
           </Card>
         ))}
       </div>
+
+      <Card>
+        <CardContent className="p-5">
+          <div className="flex gap-2">
+            {filters.map((f) => (
+              <Button
+                key={f.value}
+                variant={filter === f.value ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilter(f.value)}
+              >
+                {f.label}
+              </Button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
