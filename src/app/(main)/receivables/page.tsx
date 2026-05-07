@@ -51,9 +51,9 @@ export default function ReceivablesPage() {
     let overdue = 0;
 
     for (const r of receivables) {
-      if (r.status === "pending") pending += r.amount;
-      else if (r.status === "reconciled") reconciled += r.amount;
-      else if (r.status === "overdue") overdue += r.amount;
+      if (r.status === "pending") pending += r.totalAmount;
+      else if (r.status === "reconciled") reconciled += r.totalAmount;
+      else if (r.status === "overdue") overdue += r.totalAmount;
     }
 
     return { pending, reconciled, overdue };
@@ -176,11 +176,11 @@ export default function ReceivablesPage() {
                     }}
                   >
                     <TableCell className="font-medium">
-                      {r.description}
+                      {r.descriptionService}
                     </TableCell>
                     <TableCell>{r.clientName}</TableCell>
                     <TableCell className="font-semibold text-primary">
-                      {formatCurrency(r.amount)}
+                      {formatCurrency(r.totalAmount)}
                     </TableCell>
                     <TableCell className="hidden sm:table-cell">{formatDate(r.dueDate)}</TableCell>
                     <TableCell className="hidden sm:table-cell">

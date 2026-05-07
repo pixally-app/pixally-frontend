@@ -30,13 +30,14 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { receipts, statusConfig } from "@/data/mock-receipts";
+import { formatCurrency, formatDateTime } from "@/lib/formatters";
 
-const sourceIcon = {
+const originIcon = {
   whatsapp: <MessageCircle className="size-4" />,
   manual: <ArrowUpFromLine className="size-4" />,
 };
 
-const sourceLabel = {
+const originLabel = {
   whatsapp: "WhatsApp",
   manual: "Manual",
 };
@@ -44,21 +45,21 @@ const sourceLabel = {
 export default function ReceiptsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const [originFilter, setOriginFilter] = useState<string>("all");
 
   const filtered = useMemo(() => {
     return receipts.filter((r) => {
       const matchesSearch =
         !search ||
         r.clientName.toLowerCase().includes(search.toLowerCase()) ||
-        r.amount.includes(search);
+        String(r.depositAmount).includes(search);
 
       const matchesStatus = statusFilter === "all" || r.status === statusFilter;
-      const matchesSource = sourceFilter === "all" || r.source === sourceFilter;
+      const matchesOrigin = originFilter === "all" || r.origin === originFilter;
 
-      return matchesSearch && matchesStatus && matchesSource;
+      return matchesSearch && matchesStatus && matchesOrigin;
     });
-  }, [search, statusFilter, sourceFilter]);
+  }, [search, statusFilter, originFilter]);
 
   return (
     <div className="space-y-6">
@@ -98,7 +99,7 @@ export default function ReceiptsPage() {
                 </SelectContent>
               </Select>
 
-              <Select value={sourceFilter} onValueChange={setSourceFilter}>
+              <Select value={originFilter} onValueChange={setOriginFilter}>
                 <SelectTrigger className="w-[140px]">
                   <SelectValue placeholder="Origem" />
                 </SelectTrigger>
@@ -147,30 +148,31 @@ export default function ReceiptsPage() {
             ) : (
               filtered.map((receipt) => {
                 const status = statusConfig[receipt.status];
+                const { date, time } = formatDateTime(receipt.depositDateTime);
                 return (
                   <TableRow key={receipt.id}>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{receipt.date}</p>
-                        <p className="text-sm text-muted-foreground">{receipt.time}</p>
+                        <p className="font-medium">{date}</p>
+                        <p className="text-sm text-muted-foreground">{time}</p>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
                         <p className="font-medium">{receipt.clientName}</p>
-                        <p className="text-sm text-muted-foreground">{receipt.clientBank}</p>
+                        <p className="text-sm text-muted-foreground">{receipt.depositOriginBank}</p>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="font-semibold text-success">{receipt.amount}</span>
+                      <span className="font-semibold text-success">{formatCurrency(receipt.depositAmount)}</span>
                     </TableCell>
                     <TableCell>
                       <Badge variant={status.variant}>{status.label}</Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1.5 text-muted-foreground">
-                        {sourceIcon[receipt.source]}
-                        <span className="text-sm">{sourceLabel[receipt.source]}</span>
+                        {originIcon[receipt.origin]}
+                        <span className="text-sm">{originLabel[receipt.origin]}</span>
                       </div>
                     </TableCell>
                     <TableCell>

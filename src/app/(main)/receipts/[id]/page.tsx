@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { receipts, statusConfig, statusDescription } from "@/data/mock-receipts";
 import { receivables } from "@/data/mock-receivables";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatDateTime } from "@/lib/formatters";
 
 const statusBgColor: Record<string, string> = {
   conciliado: "bg-success/10",
@@ -31,11 +31,11 @@ export default function ReceiptDetailsPage({
   const [isEditing, setIsEditing] = useState(false);
   const [payerData, setPayerData] = useState({
     clientName: receipt?.clientName ?? "",
-    agency: receipt?.agency ?? "",
-    account: receipt?.account ?? "",
-    cpfCnpj: receipt?.cpfCnpj ?? "",
-    clientBank: receipt?.clientBank ?? "",
-    amount: receipt?.amount ?? "",
+    depositOriginAgency: receipt?.depositOriginAgency ?? "",
+    depositOriginAccount: receipt?.depositOriginAccount ?? "",
+    depositOriginDocument: receipt?.depositOriginDocument ?? "",
+    depositOriginBank: receipt?.depositOriginBank ?? "",
+    depositAmount: receipt?.depositAmount ?? 0,
     description: receipt?.description ?? "",
   });
 
@@ -54,10 +54,9 @@ export default function ReceiptDetailsPage({
     );
   }
 
-  const linkedReceivable = receipt.receivableId
-    ? receivables.find((r) => r.id === receipt.receivableId)
-    : undefined;
+  const linkedReceivable = receivables.find((r) => r.pixReceiptId === receipt.id);
   const status = statusConfig[receipt.status];
+  const { date, time } = formatDateTime(receipt.depositDateTime);
 
   return (
     <div className="space-y-6">
@@ -90,7 +89,7 @@ export default function ReceiptDetailsPage({
           )}
         </div>
         <p className="text-sm text-muted-foreground">
-          ID da Transação PIX: {receipt.transactionId}
+          ID da Transação PIX: {receipt.pixTransactionId}
         </p>
       </div>
 
@@ -128,9 +127,9 @@ export default function ReceiptDetailsPage({
                   <div className="flex items-center gap-2 text-success font-semibold text-sm mb-1">
                     <span>Conta a Receber Vinculada</span>
                   </div>
-                  <p className="font-semibold">{linkedReceivable.description}</p>
+                  <p className="font-semibold">{linkedReceivable.descriptionService}</p>
                   <p className="text-sm text-muted-foreground">
-                    Cliente: {linkedReceivable.clientName} | Valor: {formatCurrency(linkedReceivable.amount)}
+                    Cliente: {linkedReceivable.clientName} | Valor: {formatCurrency(linkedReceivable.totalAmount)}
                   </p>
                   <Link
                     href={`/receivables/${linkedReceivable.id}`}
@@ -156,11 +155,11 @@ export default function ReceiptDetailsPage({
                     onClick={() => {
                       setPayerData({
                         clientName: receipt.clientName,
-                        agency: receipt.agency,
-                        account: receipt.account,
-                        cpfCnpj: receipt.cpfCnpj,
-                        clientBank: receipt.clientBank,
-                        amount: receipt.amount,
+                        depositOriginAgency: receipt.depositOriginAgency,
+                        depositOriginAccount: receipt.depositOriginAccount,
+                        depositOriginDocument: receipt.depositOriginDocument,
+                        depositOriginBank: receipt.depositOriginBank,
+                        depositAmount: receipt.depositAmount,
                         description: receipt.description,
                       });
                       setIsEditing(false);
@@ -214,13 +213,13 @@ export default function ReceiptDetailsPage({
                     <Input
                       aria-label="Agência"
                       className="w-[60%] h-8 text-sm"
-                      value={payerData.agency}
+                      value={payerData.depositOriginAgency}
                       onChange={(e) =>
-                        setPayerData({ ...payerData, agency: e.target.value })
+                        setPayerData({ ...payerData, depositOriginAgency: e.target.value })
                       }
                     />
                   ) : (
-                    <dd className="text-sm font-medium">{payerData.agency}</dd>
+                    <dd className="text-sm font-medium">{payerData.depositOriginAgency}</dd>
                   )}
                 </div>
                 <div className="flex items-center justify-between">
@@ -229,13 +228,13 @@ export default function ReceiptDetailsPage({
                     <Input
                       aria-label="Conta"
                       className="w-[60%] h-8 text-sm"
-                      value={payerData.account}
+                      value={payerData.depositOriginAccount}
                       onChange={(e) =>
-                        setPayerData({ ...payerData, account: e.target.value })
+                        setPayerData({ ...payerData, depositOriginAccount: e.target.value })
                       }
                     />
                   ) : (
-                    <dd className="text-sm font-medium">{payerData.account}</dd>
+                    <dd className="text-sm font-medium">{payerData.depositOriginAccount}</dd>
                   )}
                 </div>
                 <div className="flex items-center justify-between">
@@ -244,13 +243,13 @@ export default function ReceiptDetailsPage({
                     <Input
                       aria-label="CPF/CNPJ"
                       className="w-[60%] h-8 text-sm"
-                      value={payerData.cpfCnpj}
+                      value={payerData.depositOriginDocument}
                       onChange={(e) =>
-                        setPayerData({ ...payerData, cpfCnpj: e.target.value })
+                        setPayerData({ ...payerData, depositOriginDocument: e.target.value })
                       }
                     />
                   ) : (
-                    <dd className="text-sm font-medium">{payerData.cpfCnpj}</dd>
+                    <dd className="text-sm font-medium">{payerData.depositOriginDocument}</dd>
                   )}
                 </div>
                 <div className="flex items-center justify-between">
@@ -259,31 +258,20 @@ export default function ReceiptDetailsPage({
                     <Input
                       aria-label="Banco"
                       className="w-[60%] h-8 text-sm"
-                      value={payerData.clientBank}
+                      value={payerData.depositOriginBank}
                       onChange={(e) =>
-                        setPayerData({ ...payerData, clientBank: e.target.value })
+                        setPayerData({ ...payerData, depositOriginBank: e.target.value })
                       }
                     />
                   ) : (
-                    <dd className="text-sm font-medium">{payerData.clientBank}</dd>
+                    <dd className="text-sm font-medium">{payerData.depositOriginBank}</dd>
                   )}
                 </div>
                 <div className="flex items-center justify-between">
                   <dt className="text-sm text-muted-foreground">Valor</dt>
-                  {isEditing ? (
-                    <Input
-                      aria-label="Valor"
-                      className="w-[60%] h-8 text-sm"
-                      value={payerData.amount}
-                      onChange={(e) =>
-                        setPayerData({ ...payerData, amount: e.target.value })
-                      }
-                    />
-                  ) : (
-                    <dd className="text-sm font-semibold text-success">
-                      {payerData.amount}
-                    </dd>
-                  )}
+                  <dd className="text-sm font-semibold text-success">
+                    {formatCurrency(payerData.depositAmount)}
+                  </dd>
                 </div>
                 <div className="flex items-center justify-between">
                   <dt className="text-sm text-muted-foreground">Descrição</dt>
@@ -307,7 +295,7 @@ export default function ReceiptDetailsPage({
                     Data e Hora do Pagamento
                   </dt>
                   <dd className="text-sm font-medium">
-                    {receipt.date}, {receipt.time}
+                    {date}, {time}
                   </dd>
                 </div>
               </dl>
@@ -324,20 +312,20 @@ export default function ReceiptDetailsPage({
               <dl className="space-y-3">
                 <div className="flex justify-between">
                   <dt className="text-sm text-muted-foreground">Nome:</dt>
-                  <dd className="text-sm font-medium">{receipt.receiverName}</dd>
+                  <dd className="text-sm font-medium">{receipt.depositDestinationName}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-sm text-muted-foreground">Banco:</dt>
-                  <dd className="text-sm font-medium">{receipt.receiverBank}</dd>
+                  <dd className="text-sm font-medium">{receipt.depositDestinationBank}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-sm text-muted-foreground">CPF/CNPJ:</dt>
-                  <dd className="text-sm font-medium">{receipt.receiverCpfCnpj}</dd>
+                  <dd className="text-sm font-medium">{receipt.depositDestinationDocument}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-sm text-muted-foreground">ID da Transação PIX:</dt>
                   <dd className="text-sm font-medium text-right max-w-[60%] break-all">
-                    {receipt.receiverPixId}
+                    {receipt.depositDestinationAccount}
                   </dd>
                 </div>
               </dl>
