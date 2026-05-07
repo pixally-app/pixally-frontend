@@ -106,10 +106,12 @@ export function ReceivableFormDialog({
               <Input
                 id="receivable-service"
                 placeholder="Ex: Manutenção ar condicionado"
+                aria-invalid={!!errors.serviceName}
+                aria-describedby={errors.serviceName ? "receivable-service-error" : undefined}
                 {...register("serviceName")}
               />
               {errors.serviceName && (
-                <p className="text-sm text-destructive">{errors.serviceName.message}</p>
+                <p id="receivable-service-error" className="text-sm text-destructive">{errors.serviceName.message}</p>
               )}
             </div>
 
@@ -128,7 +130,10 @@ export function ReceivableFormDialog({
                 value={watch("clientId")}
                 onValueChange={(value) => setValue("clientId", value, { shouldValidate: true })}
               >
-                <SelectTrigger>
+                <SelectTrigger
+                  aria-invalid={!!errors.clientId}
+                  aria-describedby={errors.clientId ? "receivable-client-error" : undefined}
+                >
                   <SelectValue placeholder="Selecione o cliente" />
                 </SelectTrigger>
                 <SelectContent>
@@ -140,7 +145,7 @@ export function ReceivableFormDialog({
                 </SelectContent>
               </Select>
               {errors.clientId && (
-                <p className="text-sm text-destructive">{errors.clientId.message}</p>
+                <p id="receivable-client-error" className="text-sm text-destructive">{errors.clientId.message}</p>
               )}
             </div>
 
@@ -149,10 +154,12 @@ export function ReceivableFormDialog({
               <Input
                 id="receivable-amount"
                 placeholder="0,00"
+                aria-invalid={!!errors.amount}
+                aria-describedby={errors.amount ? "receivable-amount-error" : undefined}
                 {...register("amount")}
               />
               {errors.amount && (
-                <p className="text-sm text-destructive">{errors.amount.message}</p>
+                <p id="receivable-amount-error" className="text-sm text-destructive">{errors.amount.message}</p>
               )}
             </div>
 
@@ -161,10 +168,12 @@ export function ReceivableFormDialog({
               <Input
                 id="receivable-dueDate"
                 type="date"
+                aria-invalid={!!errors.dueDate}
+                aria-describedby={errors.dueDate ? "receivable-dueDate-error" : undefined}
                 {...register("dueDate")}
               />
               {errors.dueDate && (
-                <p className="text-sm text-destructive">{errors.dueDate.message}</p>
+                <p id="receivable-dueDate-error" className="text-sm text-destructive">{errors.dueDate.message}</p>
               )}
             </div>
 
@@ -196,12 +205,14 @@ export function ReceivableFormDialog({
                   min={2}
                   placeholder="2"
                   value={installments > 1 ? installments : ""}
+                  aria-invalid={!!errors.installments}
+                  aria-describedby={errors.installments ? "receivable-installments-error" : undefined}
                   onChange={(e) =>
                     setValue("installments", parseInt(e.target.value) || 2, { shouldValidate: true })
                   }
                 />
                 {errors.installments && (
-                  <p className="text-sm text-destructive">{errors.installments.message}</p>
+                  <p id="receivable-installments-error" className="text-sm text-destructive">{errors.installments.message}</p>
                 )}
                 {installmentValue > 0 && (
                   <p className="text-sm text-muted-foreground">

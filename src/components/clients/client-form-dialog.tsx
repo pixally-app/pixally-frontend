@@ -89,10 +89,12 @@ export function ClientFormDialog({
               <Input
                 id="client-name"
                 placeholder="Nome completo"
+                aria-invalid={!!errors.name}
+                aria-describedby={errors.name ? "client-name-error" : undefined}
                 {...register("name")}
               />
               {errors.name && (
-                <p className="text-sm text-destructive">{errors.name.message}</p>
+                <p id="client-name-error" className="text-sm text-destructive">{errors.name.message}</p>
               )}
             </div>
             <div className="space-y-2">
@@ -108,10 +110,12 @@ export function ClientFormDialog({
               <Input
                 id="client-cpfCnpj"
                 placeholder="000.000.000-00"
+                aria-invalid={!!errors.cpfCnpj}
+                aria-describedby={errors.cpfCnpj ? "client-cpfCnpj-error" : undefined}
                 {...register("cpfCnpj")}
               />
               {errors.cpfCnpj && (
-                <p className="text-sm text-destructive">{errors.cpfCnpj.message}</p>
+                <p id="client-cpfCnpj-error" className="text-sm text-destructive">{errors.cpfCnpj.message}</p>
               )}
             </div>
             <div className="space-y-2">
@@ -119,10 +123,12 @@ export function ClientFormDialog({
               <Input
                 id="client-phone"
                 placeholder="(00) 00000-0000"
+                aria-invalid={!!errors.phone}
+                aria-describedby={errors.phone ? "client-phone-error" : undefined}
                 {...register("phone")}
               />
               {errors.phone && (
-                <p className="text-sm text-destructive">{errors.phone.message}</p>
+                <p id="client-phone-error" className="text-sm text-destructive">{errors.phone.message}</p>
               )}
             </div>
             <div className="space-y-2">
