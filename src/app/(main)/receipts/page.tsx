@@ -26,6 +26,7 @@ import {
   MessageCircle,
   ArrowUpFromLine,
   Eye,
+  FileText,
 } from "lucide-react";
 import Link from "next/link";
 import { receipts, statusConfig } from "@/data/mock-receipts";
@@ -134,46 +135,57 @@ export default function ReceiptsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((receipt) => {
-              const status = statusConfig[receipt.status];
-              return (
-                <TableRow key={receipt.id}>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">{receipt.date}</p>
-                      <p className="text-sm text-muted-foreground">{receipt.time}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">{receipt.clientName}</p>
-                      <p className="text-sm text-muted-foreground">{receipt.clientBank}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className="font-semibold text-success">{receipt.amount}</span>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={status.variant}>{status.label}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      {sourceIcon[receipt.source]}
-                      <span className="text-sm">{sourceLabel[receipt.source]}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Link
-                      href={`/receipts/${receipt.id}`}
-                      className="inline-flex items-center gap-1.5 text-sm font-medium text-primary"
-                    >
-                      <Eye className="size-4" />
-                      Ver
-                    </Link>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+            {filtered.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="h-32 text-center">
+                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                    <FileText className="size-8" />
+                    <p className="text-sm">Nenhum comprovante encontrado.</p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              filtered.map((receipt) => {
+                const status = statusConfig[receipt.status];
+                return (
+                  <TableRow key={receipt.id}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{receipt.date}</p>
+                        <p className="text-sm text-muted-foreground">{receipt.time}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{receipt.clientName}</p>
+                        <p className="text-sm text-muted-foreground">{receipt.clientBank}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-semibold text-success">{receipt.amount}</span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={status.variant}>{status.label}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5 text-muted-foreground">
+                        {sourceIcon[receipt.source]}
+                        <span className="text-sm">{sourceLabel[receipt.source]}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Link
+                        href={`/receipts/${receipt.id}`}
+                        className="inline-flex items-center gap-1.5 text-sm font-medium text-primary"
+                      >
+                        <Eye className="size-4" />
+                        Ver
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
           </TableBody>
         </Table>
       </Card>
