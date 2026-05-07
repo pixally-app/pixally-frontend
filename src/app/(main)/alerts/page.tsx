@@ -109,7 +109,17 @@ export default function AlertsPage() {
       </Card>
 
       <div className="space-y-4">
-        {filtered.map((warning) => {
+        {filtered.length === 0 ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+              <AlertTriangle className="size-10 text-muted-foreground mb-3" />
+              <p className="text-sm text-muted-foreground">
+                Nenhum alerta encontrado.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+        filtered.map((warning) => {
           const config = warningTypeConfig[warning.type];
           const { date, time } = formatDateTime(warning.createdAt);
 
@@ -151,7 +161,8 @@ export default function AlertsPage() {
               </CardContent>
             </Card>
           );
-        })}
+        })
+        )}
       </div>
     </div>
   );
