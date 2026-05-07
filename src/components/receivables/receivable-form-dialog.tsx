@@ -26,16 +26,10 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import { FormErrorMessage } from "@/components/ui/form-error-message";
 import { clients } from "@/data/mock-clients";
 
-export interface ReceivableFormData {
-  serviceName: string;
-  description: string;
-  clientId: string;
-  amount: string;
-  installments: number;
-  dueDate: string;
-}
+export type ReceivableFormData = Omit<ReceivableFormValues, "isInstallment">;
 
 interface ReceivableFormDialogProps {
   trigger: React.ReactNode;
@@ -113,11 +107,11 @@ export function ReceivableFormDialog({
               <Input
                 id="receivable-service"
                 placeholder="Ex: Manutenção ar condicionado"
+                aria-invalid={!!errors.serviceName}
+                aria-describedby={errors.serviceName ? "receivable-service-error" : undefined}
                 {...register("serviceName")}
               />
-              {errors.serviceName && (
-                <p className="text-sm text-destructive">{errors.serviceName.message}</p>
-              )}
+              <FormErrorMessage id="receivable-service-error" message={errors.serviceName?.message} />
             </div>
 
             <div className="space-y-2">
@@ -135,7 +129,10 @@ export function ReceivableFormDialog({
                 value={watch("clientId")}
                 onValueChange={(value) => setValue("clientId", value, { shouldValidate: true })}
               >
-                <SelectTrigger>
+                <SelectTrigger
+                  aria-invalid={!!errors.clientId}
+                  aria-describedby={errors.clientId ? "receivable-client-error" : undefined}
+                >
                   <SelectValue placeholder="Selecione o cliente" />
                 </SelectTrigger>
                 <SelectContent>
@@ -146,9 +143,7 @@ export function ReceivableFormDialog({
                   ))}
                 </SelectContent>
               </Select>
-              {errors.clientId && (
-                <p className="text-sm text-destructive">{errors.clientId.message}</p>
-              )}
+              <FormErrorMessage id="receivable-client-error" message={errors.clientId?.message} />
             </div>
 
             <div className="space-y-2">
@@ -156,11 +151,11 @@ export function ReceivableFormDialog({
               <Input
                 id="receivable-amount"
                 placeholder="0,00"
+                aria-invalid={!!errors.amount}
+                aria-describedby={errors.amount ? "receivable-amount-error" : undefined}
                 {...register("amount")}
               />
-              {errors.amount && (
-                <p className="text-sm text-destructive">{errors.amount.message}</p>
-              )}
+              <FormErrorMessage id="receivable-amount-error" message={errors.amount?.message} />
             </div>
 
             <div className="space-y-2">
@@ -168,11 +163,11 @@ export function ReceivableFormDialog({
               <Input
                 id="receivable-dueDate"
                 type="date"
+                aria-invalid={!!errors.dueDate}
+                aria-describedby={errors.dueDate ? "receivable-dueDate-error" : undefined}
                 {...register("dueDate")}
               />
-              {errors.dueDate && (
-                <p className="text-sm text-destructive">{errors.dueDate.message}</p>
-              )}
+              <FormErrorMessage id="receivable-dueDate-error" message={errors.dueDate?.message} />
             </div>
 
             <div className="flex items-center gap-2">
@@ -203,13 +198,13 @@ export function ReceivableFormDialog({
                   min={2}
                   placeholder="2"
                   value={installments > 1 ? installments : ""}
+                  aria-invalid={!!errors.installments}
+                  aria-describedby={errors.installments ? "receivable-installments-error" : undefined}
                   onChange={(e) =>
                     setValue("installments", parseInt(e.target.value) || 2, { shouldValidate: true })
                   }
                 />
-                {errors.installments && (
-                  <p className="text-sm text-destructive">{errors.installments.message}</p>
-                )}
+                <FormErrorMessage id="receivable-installments-error" message={errors.installments?.message} />
                 {installmentValue > 0 && (
                   <p className="text-sm text-muted-foreground">
                     {installments}x de{" "}

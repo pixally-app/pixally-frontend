@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import { receivables, type ReceivableStatus } from "@/data/mock-receivables";
 import { receipts, statusConfig as receiptStatusConfig } from "@/data/mock-receipts";
-import { formatCurrency, formatDate } from "@/lib/formatters";
+import { formatCurrency, formatDate, formatDateTime } from "@/lib/formatters";
 
 const statusConfig: Record<
   ReceivableStatus,
@@ -49,12 +49,14 @@ export default function ReceivableDetailsPage({
     );
   }
 
-  const linkedReceipts = receipts.filter((r) => r.receivableId === receivable.id);
+  const linkedReceipts = receivable.pixReceiptId
+    ? receipts.filter((r) => r.id === receivable.pixReceiptId)
+    : [];
   const status = statusConfig[receivable.status];
   const StatusIcon = status.icon;
-  const remaining = receivable.amount - receivable.amountPaid;
-  const progressPercent = receivable.amount > 0
-    ? Math.round((receivable.amountPaid / receivable.amount) * 100)
+  const remaining = receivable.totalAmount - receivable.amountPaid;
+  const progressPercent = receivable.totalAmount > 0
+    ? Math.round((receivable.amountPaid / receivable.totalAmount) * 100)
     : 0;
 
   return (
@@ -69,7 +71,7 @@ export default function ReceivableDetailsPage({
         </Link>
         <h1 className="text-2xl font-bold">Detalhes da Conta a Receber</h1>
         <p className="text-sm text-muted-foreground">
-          {receivable.description}
+          {receivable.descriptionService}
         </p>
       </div>
 
@@ -83,7 +85,7 @@ export default function ReceivableDetailsPage({
               <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
                 <div>
                   <dt className="text-sm text-muted-foreground">Descrição</dt>
-                  <dd className="text-sm font-medium">{receivable.description}</dd>
+                  <dd className="text-sm font-medium">{receivable.descriptionService}</dd>
                 </div>
                 <div>
                   <dt className="text-sm text-muted-foreground">Cliente</dt>
@@ -121,7 +123,7 @@ export default function ReceivableDetailsPage({
               <dl className="space-y-3">
                 <div className="flex items-center justify-between">
                   <dt className="text-sm text-muted-foreground">Valor Total</dt>
-                  <dd className="text-sm font-semibold">{formatCurrency(receivable.amount)}</dd>
+                  <dd className="text-sm font-semibold">{formatCurrency(receivable.totalAmount)}</dd>
                 </div>
                 <div className="flex items-center justify-between">
                   <dt className="text-sm text-muted-foreground">Valor Pago</dt>
@@ -168,13 +170,14 @@ export default function ReceivableDetailsPage({
               <TableBody>
                 {linkedReceipts.map((receipt) => {
                   const rStatus = receiptStatusConfig[receipt.status];
+                  const { date, time } = formatDateTime(receipt.depositDateTime);
                   return (
                     <TableRow key={receipt.id}>
                       <TableCell className="text-sm">
-                        {receipt.date}, {receipt.time}
+                        {date}, {time}
                       </TableCell>
                       <TableCell className="text-sm font-semibold text-primary">
-                        {receipt.amount}
+                        {formatCurrency(receipt.depositAmount)}
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
                         <Badge variant={rStatus.variant} className="gap-1">

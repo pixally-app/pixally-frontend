@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { FormErrorMessage } from "@/components/ui/form-error-message";
 import { toast } from "sonner";
 
 export default function ForgotPasswordPage() {
@@ -55,11 +56,7 @@ export default function ForgotPasswordPage() {
               aria-describedby={errors.email ? "email-error" : undefined}
               {...register("email")}
             />
-            {errors.email && (
-              <p id="email-error" className="text-sm text-destructive">
-                {errors.email.message}
-              </p>
-            )}
+            <FormErrorMessage id="email-error" message={errors.email?.message} />
           </div>
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>

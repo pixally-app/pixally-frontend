@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { FormErrorMessage } from "@/components/ui/form-error-message";
 
 export default function LoginPage() {
   const {
@@ -46,9 +47,7 @@ export default function LoginPage() {
               aria-describedby={errors.email ? "email-error" : undefined}
               {...register("email")}
             />
-            {errors.email && (
-              <p id="email-error" className="text-sm text-destructive">{errors.email.message}</p>
-            )}
+            <FormErrorMessage id="email-error" message={errors.email?.message} />
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -62,11 +61,7 @@ export default function LoginPage() {
               aria-describedby={errors.password ? "password-error" : undefined}
               {...register("password")}
             />
-            {errors.password && (
-              <p id="password-error" className="text-sm text-destructive">
-                {errors.password.message}
-              </p>
-            )}
+            <FormErrorMessage id="password-error" message={errors.password?.message} />
             <div className="flex justify-end">
               <Link
                 href="/forgot-password"
