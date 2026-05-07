@@ -143,10 +143,10 @@ export function ClientFormDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="client-number">Numero</Label>
+              <Label htmlFor="client-number">Número</Label>
               <Input
                 id="client-number"
-                placeholder="No"
+                placeholder="Nº"
                 {...register("number")}
               />
             </div>

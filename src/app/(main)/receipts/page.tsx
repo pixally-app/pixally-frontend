@@ -52,7 +52,7 @@ export default function ReceiptsPage() {
       const matchesSearch =
         !search ||
         r.clientName.toLowerCase().includes(search.toLowerCase()) ||
-        String(r.depositAmount).includes(search);
+        formatCurrency(r.depositAmount).includes(search);
 
       const matchesStatus = statusFilter === "all" || r.status === statusFilter;
       const matchesOrigin = originFilter === "all" || r.origin === originFilter;

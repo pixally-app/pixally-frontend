@@ -9,6 +9,7 @@ export const clientSchema = z.object({
   nickname: z.string().trim(),
   document: z
     .string()
+    .trim()
     .min(1, "CPF/CNPJ é obrigatório")
     .refine(
       (val) => {
@@ -19,11 +20,13 @@ export const clientSchema = z.object({
     ),
   phones: z
     .string()
+    .trim()
     .min(1, "Telefone é obrigatório")
     .refine(
       (val) => {
         const digits = val.replace(/\D/g, "");
-        return digits.length === 10 || digits.length === 11;
+        const normalized = digits.startsWith("55") ? digits.slice(2) : digits;
+        return normalized.length === 10 || normalized.length === 11;
       },
       { message: "Digite um telefone válido com DDD" }
     ),

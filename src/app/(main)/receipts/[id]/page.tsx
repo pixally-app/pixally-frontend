@@ -323,7 +323,7 @@ export default function ReceiptDetailsPage({
                   <dd className="text-sm font-medium">{receipt.depositDestinationDocument}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-sm text-muted-foreground">ID da Transação PIX:</dt>
+                  <dt className="text-sm text-muted-foreground">Conta/Chave PIX:</dt>
                   <dd className="text-sm font-medium text-right max-w-[60%] break-all">
                     {receipt.depositDestinationAccount}
                   </dd>
