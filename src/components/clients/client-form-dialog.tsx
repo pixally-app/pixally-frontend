@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { clientSchema, type ClientFormValues } from "@/schemas/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -15,32 +18,12 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 
-export interface ClientFormData {
-  name: string;
-  nickname: string;
-  cpfCnpj: string;
-  phone: string;
-  street: string;
-  neighborhood: string;
-  number: string;
-}
-
-const emptyForm: ClientFormData = {
-  name: "",
-  nickname: "",
-  cpfCnpj: "",
-  phone: "",
-  street: "",
-  neighborhood: "",
-  number: "",
-};
-
 interface ClientFormDialogProps {
   trigger: React.ReactNode;
   title: string;
   description: string;
-  defaultValues?: ClientFormData;
-  onSubmit: (data: ClientFormData) => void;
+  defaultValues?: ClientFormValues;
+  onSubmit: (data: ClientFormValues) => void;
 }
 
 export function ClientFormDialog({
@@ -51,18 +34,42 @@ export function ClientFormDialog({
   onSubmit,
 }: ClientFormDialogProps) {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<ClientFormData>(defaultValues ?? emptyForm);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ClientFormValues>({
+    resolver: zodResolver(clientSchema),
+    defaultValues: defaultValues ?? {
+      name: "",
+      nickname: "",
+      cpfCnpj: "",
+      phone: "",
+      street: "",
+      neighborhood: "",
+      number: "",
+    },
+  });
 
   function handleOpenChange(value: boolean) {
     setOpen(value);
     if (value) {
-      setForm(defaultValues ?? emptyForm);
+      reset(defaultValues ?? {
+        name: "",
+        nickname: "",
+        cpfCnpj: "",
+        phone: "",
+        street: "",
+        neighborhood: "",
+        number: "",
+      });
     }
   }
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    onSubmit(form);
+  function onFormSubmit(data: ClientFormValues) {
+    onSubmit(data);
     setOpen(false);
   }
 
@@ -75,24 +82,25 @@ export function ClientFormDialog({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onFormSubmit)}>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label htmlFor="client-name">Nome</Label>
               <Input
                 id="client-name"
                 placeholder="Nome completo"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                {...register("name")}
               />
+              {errors.name && (
+                <p className="text-sm text-destructive">{errors.name.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="client-nickname">Apelido</Label>
               <Input
                 id="client-nickname"
                 placeholder="Apelido"
-                value={form.nickname}
-                onChange={(e) => setForm({ ...form, nickname: e.target.value })}
+                {...register("nickname")}
               />
             </div>
             <div className="space-y-2">
@@ -100,26 +108,29 @@ export function ClientFormDialog({
               <Input
                 id="client-cpfCnpj"
                 placeholder="000.000.000-00"
-                value={form.cpfCnpj}
-                onChange={(e) => setForm({ ...form, cpfCnpj: e.target.value })}
+                {...register("cpfCnpj")}
               />
+              {errors.cpfCnpj && (
+                <p className="text-sm text-destructive">{errors.cpfCnpj.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="client-phone">Telefone</Label>
               <Input
                 id="client-phone"
-                placeholder="+55 69 99999-9999"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                placeholder="(00) 00000-0000"
+                {...register("phone")}
               />
+              {errors.phone && (
+                <p className="text-sm text-destructive">{errors.phone.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="client-street">Rua/Avenida</Label>
               <Input
                 id="client-street"
                 placeholder="Rua ou Avenida"
-                value={form.street}
-                onChange={(e) => setForm({ ...form, street: e.target.value })}
+                {...register("street")}
               />
             </div>
             <div className="space-y-2">
@@ -127,19 +138,15 @@ export function ClientFormDialog({
               <Input
                 id="client-neighborhood"
                 placeholder="Bairro"
-                value={form.neighborhood}
-                onChange={(e) =>
-                  setForm({ ...form, neighborhood: e.target.value })
-                }
+                {...register("neighborhood")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="client-number">Número</Label>
+              <Label htmlFor="client-number">Numero</Label>
               <Input
                 id="client-number"
-                placeholder="Nº"
-                value={form.number}
-                onChange={(e) => setForm({ ...form, number: e.target.value })}
+                placeholder="No"
+                {...register("number")}
               />
             </div>
           </div>
