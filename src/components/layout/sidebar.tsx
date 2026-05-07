@@ -42,8 +42,9 @@ export function useSidebar() {
 }
 
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
-  const isMobile = useIsMobile();
-  const [open, setOpen] = React.useState(() => !isMobile);
+  const rawIsMobile = useIsMobile();
+  const isMobile = rawIsMobile ?? false;
+  const [open, setOpen] = React.useState(true);
   const hasUserToggled = React.useRef(false);
 
   const toggleSidebar = React.useCallback(() => {
@@ -52,12 +53,13 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   React.useEffect(() => {
+    if (rawIsMobile === undefined) return;
     if (hasUserToggled.current) {
       hasUserToggled.current = false;
       return;
     }
-    setOpen(!isMobile);
-  }, [isMobile]);
+    setOpen(!rawIsMobile);
+  }, [rawIsMobile]);
 
   const value = React.useMemo(
     () => ({ open, toggleSidebar, isMobile }),
