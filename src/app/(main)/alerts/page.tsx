@@ -8,6 +8,7 @@ import { AlertTriangle, Eye } from "lucide-react";
 import Link from "next/link";
 import { warnings, warningTypeConfig, type WarningType } from "@/data/mock-alerts";
 import { formatDateTime } from "@/lib/formatters";
+import { ResolveAlertDialog } from "@/components/alerts/resolve-alert-dialog";
 
 const borderColor: Record<WarningType, string> = {
   critico: "border-destructive",
@@ -146,15 +147,17 @@ export default function AlertsPage() {
                           Ver Comprovante
                         </Link>
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
+                      <ResolveAlertDialog
+                        trigger={
+                          <Button variant="outline" size="sm">
+                            Resolver
+                          </Button>
+                        }
+                        onConfirm={(reason) => {
                           // TODO: integrar com API
+                          console.log("Resolver alerta", warning.id, reason);
                         }}
-                      >
-                        Resolver
-                      </Button>
+                      />
                     </div>
                   </div>
                 </div>
