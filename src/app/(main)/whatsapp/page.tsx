@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, Loader2 } from "lucide-react";
+import { MessageCircle, Loader2, CheckCircle2 } from "lucide-react";
 
 const steps = [
   "Abra o WhatsApp no seu celular",
@@ -13,7 +13,8 @@ const steps = [
 ];
 
 export default function WhatsAppPage() {
-  const [status, setStatus] = useState<"idle" | "connecting">("idle");
+  const [status, setStatus] = useState<"disconnected" | "connecting" | "connected">("disconnected");
+  const connectedPhone = "(11) 99999-9999";
 
   return (
     <div className="space-y-6">
@@ -26,7 +27,7 @@ export default function WhatsAppPage() {
 
       <Card>
         <CardContent className="p-8">
-          {status === "idle" ? (
+          {status === "disconnected" ? (
             <div className="flex flex-col items-center gap-6">
               <div className="flex items-center justify-center rounded-lg bg-muted size-64 text-muted-foreground">
                 <MessageCircle className="size-16" />
@@ -54,7 +55,7 @@ export default function WhatsAppPage() {
                 Conectar
               </Button>
             </div>
-          ) : (
+          ) : status === "connecting" ? (
             <div className="flex flex-col items-center gap-4 py-8">
               <MessageCircle className="size-12 text-muted-foreground" />
               <div className="flex items-center gap-2">
@@ -66,9 +67,23 @@ export default function WhatsAppPage() {
               </p>
               <Button
                 variant="outline"
-                onClick={() => setStatus("idle")}
+                onClick={() => setStatus("disconnected")}
               >
                 Cancelar
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-4 py-8">
+              <CheckCircle2 className="size-12 text-success" />
+              <span className="text-lg font-semibold">Conectado com sucesso</span>
+              <p className="text-sm text-muted-foreground">
+                {connectedPhone}
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => setStatus("disconnected")}
+              >
+                Desconectar
               </Button>
             </div>
           )}
