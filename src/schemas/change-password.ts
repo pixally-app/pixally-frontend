@@ -1,15 +1,12 @@
 import { z } from "zod";
+import { passwordSchema } from "./password";
 
 export const changePasswordSchema = z
   .object({
     currentPassword: z
       .string()
       .min(1, "Senha atual é obrigatória"),
-    newPassword: z
-      .string()
-      .min(8, "A senha deve ter pelo menos 8 caracteres")
-      .regex(/[A-Z]/, "A senha deve conter pelo menos uma letra maiúscula")
-      .regex(/[0-9]/, "A senha deve conter pelo menos um número"),
+    newPassword: passwordSchema,
     confirmPassword: z
       .string()
       .min(1, "Confirmação de senha é obrigatória"),

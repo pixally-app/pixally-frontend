@@ -30,9 +30,8 @@ export default function SettingsPage() {
     },
   });
 
-  function onChangePassword(data: ChangePasswordFormValues) {
+  function onChangePassword(_data: ChangePasswordFormValues) {
     // TODO: integrar com API
-    console.log("Alterar senha", data);
     reset();
   }
 
@@ -49,28 +48,45 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="text-lg font-bold">Meu Negócio</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="business-name">Nome do Negócio</Label>
-            <Input
-              id="business-name"
-              placeholder="Nome do seu negócio"
-              value={businessName}
-              onChange={(e) => setBusinessName(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Logo</Label>
-            <div className="flex items-center justify-center rounded-lg border-2 border-dashed border-border p-8">
-              <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                <Upload className="size-8" />
-                <p className="text-sm">Clique ou arraste para enviar a logo</p>
-              </div>
+        <CardContent>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              // TODO: integrar com API
+            }}
+            className="space-y-4"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="business-name">Nome do Negócio</Label>
+              <Input
+                id="business-name"
+                placeholder="Nome do seu negócio"
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+              />
             </div>
-          </div>
 
-          <Button>Salvar Alterações</Button>
+            <div className="space-y-2">
+              <Label htmlFor="business-logo">Logo</Label>
+              <label
+                htmlFor="business-logo"
+                className="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-border p-8 transition-colors hover:border-primary/50"
+              >
+                <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                  <Upload className="size-8" />
+                  <p className="text-sm">Clique ou arraste para enviar a logo</p>
+                </div>
+                <input
+                  id="business-logo"
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                />
+              </label>
+            </div>
+
+            <Button type="submit">Salvar Alterações</Button>
+          </form>
         </CardContent>
       </Card>
       <Card>
@@ -114,6 +130,7 @@ export default function SettingsPage() {
                 id="current-password"
                 type="password"
                 placeholder="Digite sua senha atual"
+                autoComplete="current-password"
                 aria-invalid={!!errors.currentPassword}
                 aria-describedby={errors.currentPassword ? "current-password-error" : undefined}
                 {...register("currentPassword")}
@@ -127,6 +144,7 @@ export default function SettingsPage() {
                 id="new-password"
                 type="password"
                 placeholder="Digite a nova senha"
+                autoComplete="new-password"
                 aria-invalid={!!errors.newPassword}
                 aria-describedby={errors.newPassword ? "new-password-error" : undefined}
                 {...register("newPassword")}
@@ -140,6 +158,7 @@ export default function SettingsPage() {
                 id="confirm-password"
                 type="password"
                 placeholder="Confirme a nova senha"
+                autoComplete="new-password"
                 aria-invalid={!!errors.confirmPassword}
                 aria-describedby={errors.confirmPassword ? "confirm-password-error" : undefined}
                 {...register("confirmPassword")}
