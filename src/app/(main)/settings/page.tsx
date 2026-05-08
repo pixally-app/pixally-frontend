@@ -1,19 +1,40 @@
 "use client";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { changePasswordSchema, type ChangePasswordFormValues } from "@/schemas/change-password";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { FormErrorMessage } from "@/components/ui/form-error-message";
 import { Upload } from "lucide-react";
 
 export default function SettingsPage() {
   const [businessName, setBusinessName] = useState("");
   const [accountName, setAccountName] = useState("");
   const accountEmail = "usuario@email.com";
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ChangePasswordFormValues>({
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
+
+  function onChangePassword(data: ChangePasswordFormValues) {
+    // TODO: integrar com API
+    console.log("Alterar senha", data);
+    reset();
+  }
 
   return (
     <div className="space-y-6">
@@ -85,41 +106,49 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="text-lg font-bold">Alterar Senha</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="current-password">Senha Atual</Label>
-            <Input
-              id="current-password"
-              type="password"
-              placeholder="Digite sua senha atual"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-            />
-          </div>
+        <CardContent>
+          <form onSubmit={handleSubmit(onChangePassword)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="current-password">Senha Atual</Label>
+              <Input
+                id="current-password"
+                type="password"
+                placeholder="Digite sua senha atual"
+                aria-invalid={!!errors.currentPassword}
+                aria-describedby={errors.currentPassword ? "current-password-error" : undefined}
+                {...register("currentPassword")}
+              />
+              <FormErrorMessage id="current-password-error" message={errors.currentPassword?.message} />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="new-password">Nova Senha</Label>
-            <Input
-              id="new-password"
-              type="password"
-              placeholder="Digite a nova senha"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-password">Nova Senha</Label>
+              <Input
+                id="new-password"
+                type="password"
+                placeholder="Digite a nova senha"
+                aria-invalid={!!errors.newPassword}
+                aria-describedby={errors.newPassword ? "new-password-error" : undefined}
+                {...register("newPassword")}
+              />
+              <FormErrorMessage id="new-password-error" message={errors.newPassword?.message} />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
-            <Input
-              id="confirm-password"
-              type="password"
-              placeholder="Confirme a nova senha"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                placeholder="Confirme a nova senha"
+                aria-invalid={!!errors.confirmPassword}
+                aria-describedby={errors.confirmPassword ? "confirm-password-error" : undefined}
+                {...register("confirmPassword")}
+              />
+              <FormErrorMessage id="confirm-password-error" message={errors.confirmPassword?.message} />
+            </div>
 
-          <Button>Alterar Senha</Button>
+            <Button type="submit">Alterar Senha</Button>
+          </form>
         </CardContent>
       </Card>
     </div>
