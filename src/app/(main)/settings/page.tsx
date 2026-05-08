@@ -11,6 +11,9 @@ export default function SettingsPage() {
   const [businessName, setBusinessName] = useState("");
   const [accountName, setAccountName] = useState("");
   const accountEmail = "usuario@email.com";
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   return (
     <div className="space-y-6">
@@ -75,6 +78,48 @@ export default function SettingsPage() {
               O email não pode ser alterado
             </p>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-bold">Alterar Senha</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="current-password">Senha Atual</Label>
+            <Input
+              id="current-password"
+              type="password"
+              placeholder="Digite sua senha atual"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="new-password">Nova Senha</Label>
+            <Input
+              id="new-password"
+              type="password"
+              placeholder="Digite a nova senha"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
+            <Input
+              id="confirm-password"
+              type="password"
+              placeholder="Confirme a nova senha"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+          </div>
+
+          <Button>Alterar Senha</Button>
         </CardContent>
       </Card>
     </div>
