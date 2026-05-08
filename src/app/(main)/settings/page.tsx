@@ -9,6 +9,8 @@ import { Upload } from "lucide-react";
 
 export default function SettingsPage() {
   const [businessName, setBusinessName] = useState("");
+  const [accountName, setAccountName] = useState("");
+  const accountEmail = "usuario@email.com";
 
   return (
     <div className="space-y-6">
@@ -45,6 +47,34 @@ export default function SettingsPage() {
           </div>
 
           <Button>Salvar Alterações</Button>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-bold">Minha Conta</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="account-name">Nome</Label>
+            <Input
+              id="account-name"
+              placeholder="Seu nome"
+              value={accountName}
+              onChange={(e) => setAccountName(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="account-email">Email</Label>
+            <Input
+              id="account-email"
+              value={accountEmail}
+              disabled
+            />
+            <p className="text-sm text-muted-foreground">
+              O email não pode ser alterado
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
