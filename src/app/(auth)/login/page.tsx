@@ -1,9 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { setCookie } from "cookies-next";
+import { toast } from "sonner";
+import { AxiosError } from "axios";
 import { loginSchema, type LoginFormData } from "@/schemas/login";
+import { login } from "@/services/auth";
 import {
   Card,
   CardHeader,
@@ -16,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { FormErrorMessage } from "@/components/ui/form-error-message";
 
 export default function LoginPage() {
+  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -24,8 +30,18 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  async function onSubmit(_data: LoginFormData) {
-    // TODO: integrate auth API
+  async function onSubmit(data: LoginFormData) {
+    try {
+      const response = await login(data.email, data.password);
+      setCookie("access_token", response.access_token, { maxAge: 60 * 60 * 24 });
+      router.push("/dashboard");
+    } catch (error) {
+      if (error instanceof AxiosError && error.response?.status === 401) {
+        toast.error("Email ou senha inválidos");
+      } else {
+        toast.error("Erro ao fazer login. Tente novamente.");
+      }
+    }
   }
 
   return (
