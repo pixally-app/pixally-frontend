@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { deleteCookie } from "cookies-next";
 import { warnings } from "@/data/mock-alerts";
 import {
   LayoutDashboard,
@@ -87,11 +88,6 @@ const mainNavItems: NavItem[] = [
   { label: "Configurações", href: "/settings", icon: Settings },
 ];
 
-const bottomNavItem: NavItem = {
-  label: "Sair",
-  href: "/login",
-  icon: LogOut,
-};
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -188,12 +184,18 @@ function SidebarFooter() {
 
 function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
   const pathname = usePathname();
+  const router = useRouter();
 
   function isActive(href: string) {
     if (href === "/dashboard") {
       return pathname === "/dashboard" || pathname === "/";
     }
     return pathname === href || pathname.startsWith(href + "/");
+  }
+
+  function handleLogout() {
+    deleteCookie("access_token");
+    router.push("/login");
   }
 
   return (
@@ -211,11 +213,16 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
         ))}
 
         <div className="mt-auto border-t border-sidebar-border pt-2">
-          <SidebarNavItem
-            item={bottomNavItem}
-            isActive={false}
-            onClick={onNavClick}
-          />
+          <button
+            onClick={() => {
+              handleLogout();
+              onNavClick?.();
+            }}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border-l-4 border-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          >
+            <LogOut className="h-5 w-5 shrink-0" />
+            <span className="flex-1 truncate text-left">Sair</span>
+          </button>
         </div>
       </nav>
 
