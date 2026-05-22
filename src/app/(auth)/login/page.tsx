@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { setCookie } from "cookies-next";
 import { toast } from "sonner";
-import { AxiosError } from "axios";
+import axios from "axios";
 import { loginSchema, type LoginFormData } from "@/schemas/login";
 import { login } from "@/services/auth";
 import {
@@ -33,10 +33,15 @@ export default function LoginPage() {
   async function onSubmit(data: LoginFormData) {
     try {
       const response = await login(data.email, data.password);
-      setCookie("access_token", response.access_token, { maxAge: 60 * 60 * 24 });
+      setCookie("access_token", response.access_token, {
+        maxAge: 60 * 60 * 24,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+      });
       router.push("/dashboard");
     } catch (error) {
-      if (error instanceof AxiosError && error.response?.status === 401) {
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
         toast.error("Email ou senha inválidos");
       } else {
         toast.error("Erro ao fazer login. Tente novamente.");
