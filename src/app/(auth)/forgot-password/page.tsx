@@ -7,6 +7,7 @@ import {
   forgotPasswordSchema,
   type ForgotPasswordFormData,
 } from "@/schemas/forgot-password";
+import { forgotPassword } from "@/services/auth";
 import {
   Card,
   CardHeader,
@@ -29,9 +30,15 @@ export default function ForgotPasswordPage() {
     resolver: zodResolver(forgotPasswordSchema),
   });
 
-  async function onSubmit(_data: ForgotPasswordFormData) {
-    // TODO: integrate forgot password API
-    toast.success("Email enviado com sucesso!");
+  async function onSubmit(data: ForgotPasswordFormData) {
+    try {
+      await forgotPassword(data.email);
+      toast.success(
+        "Se esse email estiver cadastrado, você receberá instruções para redefinir sua senha.",
+      );
+    } catch {
+      toast.error("Erro ao enviar email. Tente novamente.");
+    }
   }
 
   return (
