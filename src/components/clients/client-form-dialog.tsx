@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
 import { clientSchema, type ClientFormValues } from "@/schemas/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,7 +25,7 @@ interface ClientFormDialogProps {
   title: string;
   description: string;
   defaultValues?: ClientFormValues;
-  onSubmit: (data: ClientFormValues) => void;
+  onSubmit: (data: ClientFormValues) => Promise<void> | void;
 }
 
 export function ClientFormDialog({
@@ -35,6 +36,7 @@ export function ClientFormDialog({
   onSubmit,
 }: ClientFormDialogProps) {
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const {
     register,
@@ -69,9 +71,14 @@ export function ClientFormDialog({
     }
   }
 
-  function onFormSubmit(data: ClientFormValues) {
-    onSubmit(data);
-    setOpen(false);
+  async function onFormSubmit(data: ClientFormValues) {
+    setLoading(true);
+    try {
+      await onSubmit(data);
+      setOpen(false);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -154,9 +161,12 @@ export function ClientFormDialog({
 
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="outline">Cancelar</Button>
+              <Button type="button" variant="outline" disabled={loading}>Cancelar</Button>
             </DialogClose>
-            <Button type="submit">Salvar</Button>
+            <Button type="submit" disabled={loading}>
+              {loading && <Loader2 className="size-4 animate-spin" />}
+              Salvar
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
