@@ -75,29 +75,47 @@ export default function ClientsPage() {
   });
 
   async function handleCreate(data: ClientFormValues) {
-    const document = data.document.replace(/\D/g, "");
-    const response = await createClient({
-      name: data.name,
-      document,
-      documentType: getDocumentType(data.document),
-      phones: [parsePhone(data.phones)],
-    });
-    setClients((prev) => [response, ...prev]);
-    toast.success("Cliente criado com sucesso!");
+    try {
+      const document = data.document.replace(/\D/g, "");
+      const response = await createClient({
+        name: data.name,
+        document,
+        documentType: getDocumentType(data.document),
+        phones: [parsePhone(data.phones)],
+      });
+      setClients((prev) => [response, ...prev]);
+      toast.success("Cliente criado com sucesso!");
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message || "Erro ao criar cliente.");
+      } else {
+        toast.error("Erro ao criar cliente.");
+      }
+      throw error;
+    }
   }
 
   async function handleUpdate(clientId: string, phones: Client["phones"], data: ClientFormValues) {
-    const document = data.document.replace(/\D/g, "");
-    const existingPhone = phones[0];
-    const phone = parsePhone(data.phones);
-    const response = await updateClient(clientId, {
-      name: data.name,
-      document,
-      documentType: getDocumentType(data.document),
-      phones: [existingPhone ? { id: existingPhone.id, ...phone } : phone],
-    });
-    setClients((prev) => prev.map((c) => (c.id === clientId ? response : c)));
-    toast.success("Cliente atualizado com sucesso!");
+    try {
+      const document = data.document.replace(/\D/g, "");
+      const existingPhone = phones[0];
+      const phone = parsePhone(data.phones);
+      const response = await updateClient(clientId, {
+        name: data.name,
+        document,
+        documentType: getDocumentType(data.document),
+        phones: [existingPhone ? { id: existingPhone.id, ...phone } : phone],
+      });
+      setClients((prev) => prev.map((c) => (c.id === clientId ? response : c)));
+      toast.success("Cliente atualizado com sucesso!");
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message || "Erro ao atualizar cliente.");
+      } else {
+        toast.error("Erro ao atualizar cliente.");
+      }
+      throw error;
+    }
   }
 
   async function handleDelete(clientId: string) {
@@ -223,7 +241,7 @@ export default function ClientsPage() {
                         name: client.name,
                         nickname: "",
                         document: client.document,
-                        phones: phoneDisplay,
+                        phones: client.phones.length ? phoneDisplay : "",
                         street: "",
                         neighborhood: "",
                         number: "",
