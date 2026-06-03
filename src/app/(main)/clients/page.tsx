@@ -1,29 +1,144 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
+import axios from "axios";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Phone, FileText, Search, Plus, Pencil, Trash2 } from "lucide-react";
-import { clients } from "@/data/mock-clients";
+import { Users, Phone, FileText, Search, Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import { ClientFormDialog } from "@/components/clients/client-form-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { formatCurrency } from "@/lib/formatters";
+import {
+  listClients,
+  createClient,
+  updateClient,
+  deleteClient,
+  type Client,
+} from "@/services/clients";
+import type { ClientFormValues } from "@/schemas/client";
+
+function parsePhone(raw: string) {
+  const digits = raw.replace(/\D/g, "");
+  const phoneNumber = digits.startsWith("55") ? digits.slice(2) : digits;
+  return { dialCode: "+55", phoneNumber };
+}
+
+function formatPhone(phones: Client["phones"]) {
+  if (!phones.length) return "-";
+  const { dialCode, phoneNumber } = phones[0];
+  const ddd = phoneNumber.slice(0, 2);
+  const number = phoneNumber.slice(2);
+  return `${dialCode} ${ddd} ${number}`;
+}
+
+function getDocumentType(document: string) {
+  const digits = document.replace(/\D/g, "");
+  return digits.length <= 11 ? "cpf" : "cnpj";
+}
 
 export default function ClientsPage() {
+  const [clients, setClients] = useState<Client[]>([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  const filtered = useMemo(() => {
-    if (!search) return clients;
+  const fetchClients = useCallback(async () => {
+    try {
+      const response = await listClients({ limit: 100 });
+      setClients(response.data);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message || "Erro ao carregar clientes.");
+      } else {
+        toast.error("Erro ao carregar clientes.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchClients();
+  }, [fetchClients]);
+
+  const filtered = clients.filter((c) => {
+    if (!search) return true;
     const term = search.toLowerCase();
-    return clients.filter(
-      (c) =>
-        c.name.toLowerCase().includes(term) ||
-        c.document.includes(term) ||
-        c.phones.includes(term)
+    const phoneStr = formatPhone(c.phones).toLowerCase();
+    return (
+      c.name.toLowerCase().includes(term) ||
+      c.document.includes(term) ||
+      phoneStr.includes(term)
     );
-  }, [search]);
+  });
+
+  async function handleCreate(data: ClientFormValues) {
+    try {
+      const document = data.document.replace(/\D/g, "");
+      const response = await createClient({
+        name: data.name,
+        document,
+        documentType: getDocumentType(data.document),
+        phones: [parsePhone(data.phones)],
+      });
+      setClients((prev) => [response, ...prev]);
+      toast.success("Cliente criado com sucesso!");
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message || "Erro ao criar cliente.");
+      } else {
+        toast.error("Erro ao criar cliente.");
+      }
+      throw error;
+    }
+  }
+
+  async function handleUpdate(clientId: string, phones: Client["phones"], data: ClientFormValues) {
+    try {
+      const document = data.document.replace(/\D/g, "");
+      const existingPhone = phones[0];
+      const phone = parsePhone(data.phones);
+      const response = await updateClient(clientId, {
+        name: data.name,
+        document,
+        documentType: getDocumentType(data.document),
+        phones: [existingPhone ? { id: existingPhone.id, ...phone } : phone],
+      });
+      setClients((prev) => prev.map((c) => (c.id === clientId ? response : c)));
+      toast.success("Cliente atualizado com sucesso!");
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message || "Erro ao atualizar cliente.");
+      } else {
+        toast.error("Erro ao atualizar cliente.");
+      }
+      throw error;
+    }
+  }
+
+  async function handleDelete(clientId: string) {
+    try {
+      await deleteClient(clientId);
+      setClients((prev) => prev.filter((c) => c.id !== clientId));
+      toast.success("Cliente excluído com sucesso!");
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message || "Erro ao excluir cliente.");
+      } else {
+        toast.error("Erro ao excluir cliente.");
+      }
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="size-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -55,16 +170,14 @@ export default function ClientsPage() {
           }
           title="Novo Cliente"
           description="Preencha os dados do novo cliente."
-          onSubmit={(data) => {
-            // TODO: integrar com API
-            console.log(data);
-          }}
+          onSubmit={handleCreate}
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filtered.map((client) => {
           const hasReceivable = client.totalReceivable > 0;
+          const phoneDisplay = formatPhone(client.phones);
 
           return (
             <Card key={client.id} className="relative">
@@ -91,7 +204,7 @@ export default function ClientsPage() {
                 <div className="space-y-1.5 text-sm text-muted-foreground mb-4">
                   <div className="flex items-center gap-2">
                     <Phone className="size-3.5" />
-                    <span>{client.phones}</span>
+                    <span>{phoneDisplay}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <FileText className="size-3.5" />
@@ -128,15 +241,12 @@ export default function ClientsPage() {
                         name: client.name,
                         nickname: "",
                         document: client.document,
-                        phones: client.phones,
+                        phones: client.phones.length ? phoneDisplay : "",
                         street: "",
                         neighborhood: "",
                         number: "",
                       }}
-                      onSubmit={(data) => {
-                        // TODO: integrar com API
-                        console.log(data);
-                      }}
+                      onSubmit={(data) => handleUpdate(client.id, client.phones, data)}
                     />
                     <ConfirmDialog
                       trigger={
@@ -148,10 +258,7 @@ export default function ClientsPage() {
                       description={`Tem certeza que deseja excluir ${client.name}? Esta ação não pode ser desfeita.`}
                       confirmLabel="Excluir"
                       icon={<Trash2 className="size-4" />}
-                      onConfirm={() => {
-                        // TODO: integrar com API
-                        console.log("delete", client.id);
-                      }}
+                      onConfirm={() => handleDelete(client.id)}
                     />
                   </div>
                 </div>
