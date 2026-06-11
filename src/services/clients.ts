@@ -13,6 +13,9 @@ export interface Client {
   document: string;
   documentType: string;
   status: boolean;
+  street: string | null;
+  neighborhood: string | null;
+  number: string | null;
   phones: PhoneResponse[];
   createdAt: string;
   updatedAt: string;
@@ -42,6 +45,9 @@ export interface CreateClientData {
   document: string;
   documentType?: string;
   status?: boolean;
+  street?: string;
+  neighborhood?: string;
+  number?: string;
   phones?: { dialCode: string; phoneNumber: string }[];
 }
 
@@ -50,6 +56,9 @@ export interface UpdateClientData {
   document?: string;
   documentType?: string;
   status?: boolean;
+  street?: string;
+  neighborhood?: string;
+  number?: string;
   phones?: { id?: string; dialCode: string; phoneNumber: string }[];
 }
 
