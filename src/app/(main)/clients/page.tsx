@@ -7,9 +7,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Phone, FileText, Search, Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Users, Phone, Search, Plus, Loader2 } from "lucide-react";
 import { ClientFormDialog } from "@/components/clients/client-form-dialog";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ClientDetailsSheet } from "@/components/clients/client-details-sheet";
 import { formatCurrency } from "@/lib/formatters";
 import {
   listClients,
@@ -20,22 +20,22 @@ import {
 } from "@/services/clients";
 import type { ClientFormValues } from "@/schemas/client";
 
-function parsePhone(raw: string) {
-  const digits = raw.replace(/\D/g, "");
-  const phoneNumber = digits.startsWith("55") ? digits.slice(2) : digits;
-  return { dialCode: "+55", phoneNumber };
-}
-
-function formatPhone(phone: Client["phones"][number]) {
+export function formatPhone(phone: Client["phones"][number]) {
   const { dialCode, phoneNumber } = phone;
   const ddd = phoneNumber.slice(0, 2);
   const number = phoneNumber.slice(2);
   return `${dialCode} ${ddd} ${number}`;
 }
 
-function formatFirstPhone(phones: Client["phones"]) {
+export function formatFirstPhone(phones: Client["phones"]) {
   if (!phones.length) return "-";
   return formatPhone(phones[0]);
+}
+
+function parsePhone(raw: string) {
+  const digits = raw.replace(/\D/g, "");
+  const phoneNumber = digits.startsWith("55") ? digits.slice(2) : digits;
+  return { dialCode: "+55", phoneNumber };
 }
 
 function getDocumentType(document: string) {
@@ -70,7 +70,7 @@ export default function ClientsPage() {
   const filtered = clients.filter((c) => {
     if (!search) return true;
     const term = search.toLowerCase();
-    const phoneStr = formatPhone(c.phones).toLowerCase();
+    const phoneStr = formatFirstPhone(c.phones).toLowerCase();
     return (
       c.name.toLowerCase().includes(term) ||
       c.document.includes(term) ||
@@ -85,6 +85,9 @@ export default function ClientsPage() {
         name: data.name,
         document,
         documentType: getDocumentType(data.document),
+        street: data.street || undefined,
+        neighborhood: data.neighborhood || undefined,
+        number: data.number || undefined,
         phones: [parsePhone(data.phones)],
       });
       setClients((prev) => [response, ...prev]);
@@ -108,6 +111,9 @@ export default function ClientsPage() {
         name: data.name,
         document,
         documentType: getDocumentType(data.document),
+        street: data.street || undefined,
+        neighborhood: data.neighborhood || undefined,
+        number: data.number || undefined,
         phones: [existingPhone ? { id: existingPhone.id, ...phone } : phone],
       });
       setClients((prev) => prev.map((c) => (c.id === clientId ? response : c)));
@@ -179,53 +185,44 @@ export default function ClientsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.map((client) => {
-          const hasReceivable = client.totalReceivable > 0;
-          const phoneDisplay = formatFirstPhone(client.phones);
-
-          return (
-            <Card key={client.id} className="relative">
-              <CardContent className="p-5">
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="flex items-center justify-center size-10 rounded-full bg-muted">
-                    <Users className="size-5 text-muted-foreground" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <h3 className="font-semibold truncate">{client.name}</h3>
-                      {hasReceivable && (
-                        <Badge variant="destructive" className="text-xs shrink-0">
-                          A receber
-                        </Badge>
-                      )}
+        {filtered.map((client) => (
+          <ClientDetailsSheet
+            key={client.id}
+            client={client}
+            formatPhone={formatPhone}
+            formatFirstPhone={formatFirstPhone}
+            onEdit={(data) => handleUpdate(client.id, client.phones, data)}
+            onDelete={() => handleDelete(client.id)}
+            trigger={
+              <Card className="cursor-pointer hover:shadow-md transition-shadow">
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="flex items-center justify-center size-10 rounded-full bg-muted shrink-0">
+                      <Users className="size-5 text-muted-foreground" />
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      {client.document}
-                    </p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="font-semibold truncate">{client.name}</h3>
+                        {client.totalReceivable > 0 && (
+                          <Badge variant="destructive" className="text-xs shrink-0">
+                            A receber
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{client.document}</p>
+                    </div>
                   </div>
-                </div>
 
-                <div className="space-y-1.5 text-sm text-muted-foreground mb-4">
-                  {client.phones.length === 0 ? (
+                  <div className="space-y-1.5 text-sm text-muted-foreground mb-4">
                     <div className="flex items-center gap-2">
                       <Phone className="size-3.5" />
-                      <span>-</span>
+                      <span>{formatFirstPhone(client.phones)}</span>
+                      {client.phones.length > 1 && (
+                        <span className="text-xs">+{client.phones.length - 1}</span>
+                      )}
                     </div>
-                  ) : (
-                    client.phones.map((phone, i) => (
-                      <div key={phone.id} className="flex items-center gap-2">
-                        <Phone className={`size-3.5 ${i > 0 ? "invisible" : ""}`} />
-                        <span>{formatPhone(phone)}</span>
-                      </div>
-                    ))
-                  )}
-                  <div className="flex items-center gap-2">
-                    <FileText className="size-3.5" />
-                    <span>{client.receiptsCount} comprovante(s)</span>
                   </div>
-                </div>
 
-                <div className="flex items-end justify-between">
                   <div className="flex gap-6 text-sm">
                     <div>
                       <p className="text-muted-foreground">Total Recebido</p>
@@ -240,44 +237,11 @@ export default function ClientsPage() {
                       </p>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-1">
-                    <ClientFormDialog
-                      trigger={
-                        <Button variant="ghost" size="icon" className="size-8" aria-label={`Editar cliente ${client.name}`}>
-                          <Pencil className="size-3.5" />
-                        </Button>
-                      }
-                      title="Editar Cliente"
-                      description="Atualize os dados do cliente."
-                      defaultValues={{
-                        name: client.name,
-                        document: client.document,
-                        phones: client.phones.length ? phoneDisplay : "",
-                        street: "",
-                        neighborhood: "",
-                        number: "",
-                      }}
-                      onSubmit={(data) => handleUpdate(client.id, client.phones, data)}
-                    />
-                    <ConfirmDialog
-                      trigger={
-                        <Button variant="ghost" size="icon" className="size-8 text-destructive hover:text-destructive hover:bg-destructive/10" aria-label={`Excluir cliente ${client.name}`}>
-                          <Trash2 className="size-3.5" />
-                        </Button>
-                      }
-                      title="Excluir cliente"
-                      description={`Tem certeza que deseja excluir ${client.name}? Esta ação não pode ser desfeita.`}
-                      confirmLabel="Excluir"
-                      icon={<Trash2 className="size-4" />}
-                      onConfirm={() => handleDelete(client.id)}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+                </CardContent>
+              </Card>
+            }
+          />
+        ))}
       </div>
     </div>
   );
