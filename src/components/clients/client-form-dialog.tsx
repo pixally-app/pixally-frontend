@@ -47,7 +47,6 @@ export function ClientFormDialog({
     resolver: zodResolver(clientSchema),
     defaultValues: defaultValues ?? {
       name: "",
-      nickname: "",
       document: "",
       phones: "",
       street: "",
@@ -61,7 +60,6 @@ export function ClientFormDialog({
     if (value) {
       reset(defaultValues ?? {
         name: "",
-        nickname: "",
         document: "",
         phones: "",
         street: "",
@@ -102,14 +100,6 @@ export function ClientFormDialog({
                 {...register("name")}
               />
               <FormErrorMessage id="client-name-error" message={errors.name?.message} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="client-nickname">Apelido</Label>
-              <Input
-                id="client-nickname"
-                placeholder="Apelido"
-                {...register("nickname")}
-              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="client-document">CPF/CNPJ</Label>
