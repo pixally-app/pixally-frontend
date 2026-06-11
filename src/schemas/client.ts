@@ -6,7 +6,6 @@ export const clientSchema = z.object({
     .trim()
     .min(1, "Nome é obrigatório")
     .min(3, "Nome deve ter pelo menos 3 caracteres"),
-  nickname: z.string().trim(),
   document: z
     .string()
     .trim()

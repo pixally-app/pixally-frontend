@@ -26,12 +26,16 @@ function parsePhone(raw: string) {
   return { dialCode: "+55", phoneNumber };
 }
 
-function formatPhone(phones: Client["phones"]) {
-  if (!phones.length) return "-";
-  const { dialCode, phoneNumber } = phones[0];
+function formatPhone(phone: Client["phones"][number]) {
+  const { dialCode, phoneNumber } = phone;
   const ddd = phoneNumber.slice(0, 2);
   const number = phoneNumber.slice(2);
   return `${dialCode} ${ddd} ${number}`;
+}
+
+function formatFirstPhone(phones: Client["phones"]) {
+  if (!phones.length) return "-";
+  return formatPhone(phones[0]);
 }
 
 function getDocumentType(document: string) {
@@ -177,7 +181,7 @@ export default function ClientsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filtered.map((client) => {
           const hasReceivable = client.totalReceivable > 0;
-          const phoneDisplay = formatPhone(client.phones);
+          const phoneDisplay = formatFirstPhone(client.phones);
 
           return (
             <Card key={client.id} className="relative">
@@ -202,10 +206,19 @@ export default function ClientsPage() {
                 </div>
 
                 <div className="space-y-1.5 text-sm text-muted-foreground mb-4">
-                  <div className="flex items-center gap-2">
-                    <Phone className="size-3.5" />
-                    <span>{phoneDisplay}</span>
-                  </div>
+                  {client.phones.length === 0 ? (
+                    <div className="flex items-center gap-2">
+                      <Phone className="size-3.5" />
+                      <span>-</span>
+                    </div>
+                  ) : (
+                    client.phones.map((phone, i) => (
+                      <div key={phone.id} className="flex items-center gap-2">
+                        <Phone className={`size-3.5 ${i > 0 ? "invisible" : ""}`} />
+                        <span>{formatPhone(phone)}</span>
+                      </div>
+                    ))
+                  )}
                   <div className="flex items-center gap-2">
                     <FileText className="size-3.5" />
                     <span>{client.receiptsCount} comprovante(s)</span>
@@ -239,7 +252,6 @@ export default function ClientsPage() {
                       description="Atualize os dados do cliente."
                       defaultValues={{
                         name: client.name,
-                        nickname: "",
                         document: client.document,
                         phones: client.phones.length ? phoneDisplay : "",
                         street: "",
