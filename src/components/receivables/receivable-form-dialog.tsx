@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { receivableSchema, type ReceivableFormValues } from "@/schemas/receivable";
@@ -27,13 +27,13 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { FormErrorMessage } from "@/components/ui/form-error-message";
-import { clients } from "@/data/mock-clients";
+import { listClients, type Client } from "@/services/clients";
 
 export type ReceivableFormData = Omit<ReceivableFormValues, "isInstallment">;
 
 interface ReceivableFormDialogProps {
   trigger: React.ReactNode;
-  onSubmit: (data: ReceivableFormData) => void;
+  onSubmit: (data: ReceivableFormData) => Promise<void>;
 }
 
 export function ReceivableFormDialog({
@@ -41,6 +41,14 @@ export function ReceivableFormDialog({
   onSubmit,
 }: ReceivableFormDialogProps) {
   const [open, setOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [clients, setClients] = useState<Client[]>([]);
+
+  useEffect(() => {
+    if (open) {
+      listClients({ limit: 100 }).then((res) => setClients(res.data)).catch(() => {});
+    }
+  }, [open]);
 
   const {
     register,
@@ -77,16 +85,21 @@ export function ReceivableFormDialog({
     }
   }
 
-  function onFormSubmit(data: ReceivableFormValues) {
-    onSubmit({
-      serviceName: data.serviceName,
-      description: data.description ?? "",
-      clientId: data.clientId,
-      amount: data.amount,
-      installments: data.isInstallment ? data.installments : 1,
-      dueDate: data.dueDate,
-    });
-    setOpen(false);
+  async function onFormSubmit(data: ReceivableFormValues) {
+    try {
+      setSubmitting(true);
+      await onSubmit({
+        serviceName: data.serviceName,
+        description: data.description ?? "",
+        clientId: data.clientId,
+        amount: data.amount,
+        installments: data.isInstallment ? data.installments : 1,
+        dueDate: data.dueDate,
+      });
+      setOpen(false);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -222,11 +235,13 @@ export function ReceivableFormDialog({
 
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="outline">
+              <Button type="button" variant="outline" disabled={submitting}>
                 Cancelar
               </Button>
             </DialogClose>
-            <Button type="submit">Salvar</Button>
+            <Button type="submit" disabled={submitting}>
+              {submitting ? "Salvando..." : "Salvar"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -1,29 +1,22 @@
 "use client";
 
-import { use } from "react";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Clock, CheckCircle2, AlertTriangle, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui/table";
-import { receivables, type ReceivableStatus } from "@/data/mock-receivables";
-import { receipts, statusConfig as receiptStatusConfig } from "@/data/mock-receipts";
-import { formatCurrency, formatDate, formatDateTime } from "@/lib/formatters";
+import { formatCurrency, formatDate } from "@/lib/formatters";
+import { getReceivable, type AccountReceivable, type AccountReceivableStatus } from "@/services/receivables";
+import { isAxiosError } from "axios";
+import { toast } from "sonner";
 
 const statusConfig: Record<
-  ReceivableStatus,
+  AccountReceivableStatus,
   { label: string; variant: "warning" | "success" | "destructive"; icon: typeof Clock }
 > = {
-  pending: { label: "Pendente", variant: "warning", icon: Clock },
-  reconciled: { label: "Conciliado", variant: "success", icon: CheckCircle2 },
-  overdue: { label: "Vencido", variant: "destructive", icon: AlertTriangle },
+  pendente: { label: "Pendente", variant: "warning", icon: Clock },
+  pago: { label: "Pago", variant: "success", icon: CheckCircle2 },
+  vencido: { label: "Vencido", variant: "destructive", icon: AlertTriangle },
 };
 
 export default function ReceivableDetailsPage({
@@ -32,9 +25,39 @@ export default function ReceivableDetailsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const receivable = receivables.find((r) => r.id === id);
+  const [receivable, setReceivable] = useState<AccountReceivable | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-  if (!receivable) {
+  useEffect(() => {
+    getReceivable(id)
+      .then(setReceivable)
+      .catch((err) => {
+        if (isAxiosError(err) && err.response?.status === 404) {
+          setNotFound(true);
+        } else {
+          toast.error("Erro ao carregar conta a receber");
+        }
+      })
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Link
+          href="/receivables"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" />
+          Voltar
+        </Link>
+        <p className="text-muted-foreground text-sm">Carregando...</p>
+      </div>
+    );
+  }
+
+  if (notFound || !receivable) {
     return (
       <div className="space-y-6">
         <Link
@@ -49,14 +72,12 @@ export default function ReceivableDetailsPage({
     );
   }
 
-  const linkedReceipts = receivable.pixReceiptId
-    ? receipts.filter((r) => r.id === receivable.pixReceiptId)
-    : [];
   const status = statusConfig[receivable.status];
   const StatusIcon = status.icon;
-  const remaining = receivable.totalAmount - receivable.amountPaid;
+  const amountPaid = receivable.paidAt ? receivable.totalAmount : 0;
+  const remaining = receivable.totalAmount - amountPaid;
   const progressPercent = receivable.totalAmount > 0
-    ? Math.round((receivable.amountPaid / receivable.totalAmount) * 100)
+    ? Math.round((amountPaid / receivable.totalAmount) * 100)
     : 0;
 
   return (
@@ -70,9 +91,6 @@ export default function ReceivableDetailsPage({
           Voltar
         </Link>
         <h1 className="text-2xl font-bold">Detalhes da Conta a Receber</h1>
-        <p className="text-sm text-muted-foreground">
-          {receivable.descriptionService}
-        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -84,12 +102,18 @@ export default function ReceivableDetailsPage({
             <CardContent>
               <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
                 <div>
-                  <dt className="text-sm text-muted-foreground">Descrição</dt>
-                  <dd className="text-sm font-medium">{receivable.descriptionService}</dd>
+                  <dt className="text-sm text-muted-foreground">Serviço</dt>
+                  <dd className="text-sm font-medium">{receivable.serviceName ?? "-"}</dd>
                 </div>
+                {receivable.serviceDescription && (
+                  <div>
+                    <dt className="text-sm text-muted-foreground">Descrição</dt>
+                    <dd className="text-sm font-medium">{receivable.serviceDescription}</dd>
+                  </div>
+                )}
                 <div>
                   <dt className="text-sm text-muted-foreground">Cliente</dt>
-                  <dd className="text-sm font-medium">{receivable.clientName}</dd>
+                  <dd className="text-sm font-medium">{receivable.clientName ?? "-"}</dd>
                 </div>
                 <div>
                   <dt className="text-sm text-muted-foreground">Criado em</dt>
@@ -108,10 +132,17 @@ export default function ReceivableDetailsPage({
                     </Badge>
                   </dd>
                 </div>
+                {receivable.installmentCount && receivable.installmentCount > 1 && (
+                  <div>
+                    <dt className="text-sm text-muted-foreground">Parcela</dt>
+                    <dd className="text-sm font-medium">
+                      {receivable.installmentNumber}/{receivable.installmentCount}
+                    </dd>
+                  </div>
+                )}
               </dl>
             </CardContent>
           </Card>
-
         </div>
 
         <div className="space-y-6">
@@ -127,7 +158,7 @@ export default function ReceivableDetailsPage({
                 </div>
                 <div className="flex items-center justify-between">
                   <dt className="text-sm text-muted-foreground">Valor Pago</dt>
-                  <dd className="text-sm font-semibold text-success">{formatCurrency(receivable.amountPaid)}</dd>
+                  <dd className="text-sm font-semibold text-success">{formatCurrency(amountPaid)}</dd>
                 </div>
                 <div className="flex items-center justify-between">
                   <dt className="text-sm text-muted-foreground">Restante</dt>
@@ -154,50 +185,17 @@ export default function ReceivableDetailsPage({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-bold">PIX Vinculados</CardTitle>
+          <CardTitle className="text-lg font-bold">PIX Vinculado</CardTitle>
         </CardHeader>
         <CardContent>
-          {linkedReceipts.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead className="hidden sm:table-cell">Status</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {linkedReceipts.map((receipt) => {
-                  const rStatus = receiptStatusConfig[receipt.status];
-                  const { date, time } = formatDateTime(receipt.depositDateTime);
-                  return (
-                    <TableRow key={receipt.id}>
-                      <TableCell className="text-sm">
-                        {date}, {time}
-                      </TableCell>
-                      <TableCell className="text-sm font-semibold text-primary">
-                        {formatCurrency(receipt.depositAmount)}
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        <Badge variant={rStatus.variant} className="gap-1">
-                          {rStatus.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Link
-                          href={`/receipts/${receipt.id}`}
-                          className="inline-flex items-center gap-1 text-sm font-medium text-primary"
-                        >
-                          Ver comprovante
-                          <ArrowRight className="size-3.5" />
-                        </Link>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+          {receivable.pixReceiptId ? (
+            <Link
+              href={`/receipts/${receivable.pixReceiptId}`}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary"
+            >
+              Ver comprovante PIX
+              <ArrowRight className="size-3.5" />
+            </Link>
           ) : (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <FileText className="size-10 text-muted-foreground mb-3" />
