@@ -69,6 +69,11 @@ export default function ReceivablesPage() {
     fetchReceivables();
   }, [fetchReceivables]);
 
+  const sortedReceivables = useMemo(
+    () => [...receivables].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [receivables]
+  );
+
   const summary = useMemo(() => {
     let pendente = 0;
     let pago = 0;
@@ -210,7 +215,7 @@ export default function ReceivablesPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              receivables.map((r) => {
+              sortedReceivables.map((r) => {
                 const config = statusConfig[r.status];
                 const StatusIcon = config.icon;
 
