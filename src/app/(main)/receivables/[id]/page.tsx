@@ -5,8 +5,11 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, Clock, CheckCircle2, AlertTriangle, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { getReceivable, type AccountReceivable, type AccountReceivableStatus } from "@/services/receivables";
+import { getReceivable, updateReceivable, type AccountReceivable, type AccountReceivableStatus } from "@/services/receivables";
+import { ReceivableEditDialog } from "@/components/receivables/receivable-edit-dialog";
+import { DueDateField } from "@/components/receivables/due-date-field";
 import { isAxiosError } from "axios";
 import { toast } from "sonner";
 
@@ -28,6 +31,7 @@ export default function ReceivableDetailsPage({
   const [receivable, setReceivable] = useState<AccountReceivable | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [markingPaid, setMarkingPaid] = useState(false);
 
   useEffect(() => {
     getReceivable(id)
@@ -72,6 +76,42 @@ export default function ReceivableDetailsPage({
     );
   }
 
+  async function handleEdit(data: {
+    serviceName: string;
+    serviceDescription?: string;
+    totalAmount: number;
+    dueDate: string;
+  }) {
+    try {
+      await updateReceivable(id, data);
+      const updated = await getReceivable(id);
+      setReceivable(updated);
+      toast.success("Conta atualizada com sucesso!");
+    } catch (err) {
+      const message = isAxiosError(err)
+        ? err.response?.data?.message ?? "Erro ao atualizar conta"
+        : "Erro ao atualizar conta";
+      toast.error(message);
+      throw err;
+    }
+  }
+
+  async function handleMarkAsPaid() {
+    try {
+      setMarkingPaid(true);
+      const updated = await updateReceivable(id, { paidAt: new Date().toISOString() });
+      setReceivable(updated);
+      toast.success("Conta marcada como paga!");
+    } catch (err) {
+      const message = isAxiosError(err)
+        ? err.response?.data?.message ?? "Erro ao atualizar conta"
+        : "Erro ao atualizar conta";
+      toast.error(message);
+    } finally {
+      setMarkingPaid(false);
+    }
+  }
+
   const status = statusConfig[receivable.status];
   const StatusIcon = status.icon;
   const amountPaid = receivable.paidAt ? receivable.totalAmount : 0;
@@ -96,8 +136,9 @@ export default function ReceivableDetailsPage({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg font-bold">Informações</CardTitle>
+              <ReceivableEditDialog receivable={receivable} onSubmit={handleEdit} />
             </CardHeader>
             <CardContent>
               <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
@@ -120,10 +161,6 @@ export default function ReceivableDetailsPage({
                   <dd className="text-sm font-medium">{formatDate(receivable.createdAt)}</dd>
                 </div>
                 <div>
-                  <dt className="text-sm text-muted-foreground">Vencimento</dt>
-                  <dd className="text-sm font-medium">{formatDate(receivable.dueDate)}</dd>
-                </div>
-                <div>
                   <dt className="text-sm text-muted-foreground">Status</dt>
                   <dd>
                     <Badge variant={status.variant} className="gap-1">
@@ -140,6 +177,12 @@ export default function ReceivableDetailsPage({
                     </dd>
                   </div>
                 )}
+                <div className="sm:col-span-2">
+                  <DueDateField
+                    date={formatDate(receivable.dueDate)}
+                    status={receivable.status}
+                  />
+                </div>
               </dl>
             </CardContent>
           </Card>
@@ -178,6 +221,17 @@ export default function ReceivableDetailsPage({
                   />
                 </div>
               </div>
+
+              {receivable.status !== "pago" && (
+                <Button
+                  className="w-full"
+                  onClick={handleMarkAsPaid}
+                  disabled={markingPaid}
+                >
+                  <CheckCircle2 className="size-4" />
+                  {markingPaid ? "Salvando..." : "Marcar como Pago"}
+                </Button>
+              )}
             </CardContent>
           </Card>
         </div>
