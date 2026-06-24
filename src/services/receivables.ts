@@ -35,6 +35,7 @@ export interface PaginatedReceivables {
 export interface ListReceivablesParams {
   status?: AccountReceivableStatus;
   clientId?: string;
+  installmentGroupId?: string;
   page?: number;
   limit?: number;
 }
@@ -82,8 +83,12 @@ export async function createReceivable(data: CreateReceivableData): Promise<Acco
 }
 
 export async function updateReceivable(id: string, data: UpdateReceivableData): Promise<AccountReceivable> {
-  const response = await api.put<AccountReceivable>(`/accounts-receivable/${id}`, data);
+  const response = await api.patch<AccountReceivable>(`/accounts-receivable/${id}`, data);
   return response.data;
+}
+
+export async function markInstallmentGroupAsPaid(groupId: string): Promise<void> {
+  await api.patch(`/accounts-receivable/group/${groupId}/mark-paid`);
 }
 
 export async function deleteReceivable(id: string): Promise<void> {
