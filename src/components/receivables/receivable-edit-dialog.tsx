@@ -7,7 +7,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input, inputBaseClasses } from "@/components/ui/input";
+import CurrencyInput from "react-currency-input-field";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -50,10 +51,6 @@ interface ReceivableEditDialogProps {
   onSubmit: (data: { serviceName: string; serviceDescription?: string; totalAmount: number; dueDate: string }) => Promise<void>;
 }
 
-function toFormAmount(cents: number): string {
-  return (cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
 export function ReceivableEditDialog({ receivable, onSubmit }: ReceivableEditDialogProps) {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -62,6 +59,8 @@ export function ReceivableEditDialog({ receivable, onSubmit }: ReceivableEditDia
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<EditFormValues>({
     resolver: zodResolver(editSchema),
@@ -72,7 +71,7 @@ export function ReceivableEditDialog({ receivable, onSubmit }: ReceivableEditDia
       reset({
         serviceName: receivable.serviceName ?? "",
         serviceDescription: receivable.serviceDescription ?? "",
-        totalAmount: toFormAmount(receivable.totalAmount),
+        totalAmount: receivable.totalAmount.toString(),
         dueDate: receivable.dueDate.split("T")[0],
       });
     }
@@ -81,7 +80,7 @@ export function ReceivableEditDialog({ receivable, onSubmit }: ReceivableEditDia
   async function onFormSubmit(data: EditFormValues) {
     try {
       setSubmitting(true);
-      const totalAmount = parseFloat(data.totalAmount.replace(/\./g, "").replace(",", ".")) * 100;
+      const totalAmount = parseFloat(data.totalAmount);
       await onSubmit({
         serviceName: data.serviceName,
         serviceDescription: data.serviceDescription || undefined,
@@ -133,12 +132,18 @@ export function ReceivableEditDialog({ receivable, onSubmit }: ReceivableEditDia
 
             <div className="space-y-2">
               <Label htmlFor="edit-amount">Valor Total (R$)</Label>
-              <Input
+              <CurrencyInput
                 id="edit-amount"
-                placeholder="0,00"
+                placeholder="R$ 0,00"
+                intlConfig={{ locale: "pt-BR", currency: "BRL" }}
+                decimalsLimit={2}
+                value={watch("totalAmount")}
+                onValueChange={(_val, _name, values) =>
+                  setValue("totalAmount", values?.float?.toString() ?? "", { shouldValidate: true })
+                }
                 aria-invalid={!!errors.totalAmount}
                 aria-describedby={errors.totalAmount ? "edit-amount-error" : undefined}
-                {...register("totalAmount")}
+                className={inputBaseClasses}
               />
               <FormErrorMessage id="edit-amount-error" message={errors.totalAmount?.message} />
             </div>

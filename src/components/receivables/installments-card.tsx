@@ -1,51 +1,43 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, Clock, AlertTriangle } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import {
-  markInstallmentGroupAsPaid,
-  type AccountReceivable,
-  type AccountReceivableStatus,
+  markAllInstallmentsAsPaid,
+  markInstallmentAsPaid,
+  type Installment,
 } from "@/services/receivables";
+import { statusConfig } from "@/components/receivables/status-config";
 import { isAxiosError } from "axios";
 import { toast } from "sonner";
 
-const statusConfig: Record<
-  AccountReceivableStatus,
-  { label: string; variant: "warning" | "success" | "destructive"; icon: typeof Clock }
-> = {
-  pendente: { label: "Pendente", variant: "warning", icon: Clock },
-  pago: { label: "Pago", variant: "success", icon: CheckCircle2 },
-  vencido: { label: "Vencido", variant: "destructive", icon: AlertTriangle },
-};
-
 interface InstallmentsCardProps {
-  installments: AccountReceivable[];
-  installmentGroupId: string;
-  currentInstallmentId: string;
-  onAllPaid: () => Promise<void>;
+  installments: Installment[];
+  accountReceivableId: string;
+  onUpdate: () => Promise<void>;
 }
 
 export function InstallmentsCard({
   installments,
-  installmentGroupId,
-  currentInstallmentId,
-  onAllPaid,
+  accountReceivableId,
+  onUpdate,
 }: InstallmentsCardProps) {
   const [markingAll, setMarkingAll] = useState(false);
+  const [markingId, setMarkingId] = useState<string | null>(null);
 
-  const allPaid = installments.length > 0 && installments.every((i) => i.status === "pago");
+  const allPaid = installments.length > 0 && installments.every((i) => i.status === "PAID");
+  const totalCount = installments.length;
 
   async function handleMarkAllAsPaid() {
     try {
       setMarkingAll(true);
-      await markInstallmentGroupAsPaid(installmentGroupId);
+      await markAllInstallmentsAsPaid(accountReceivableId);
       toast.success("Todas as parcelas marcadas como pagas!");
-      await onAllPaid();
+      await onUpdate();
     } catch (err) {
       const message = isAxiosError(err)
         ? err.response?.data?.message ?? "Erro ao atualizar parcelas"
@@ -53,6 +45,22 @@ export function InstallmentsCard({
       toast.error(message);
     } finally {
       setMarkingAll(false);
+    }
+  }
+
+  async function handleMarkOnePaid(installmentId: string) {
+    try {
+      setMarkingId(installmentId);
+      await markInstallmentAsPaid(accountReceivableId, installmentId);
+      toast.success("Parcela marcada como paga!");
+      await onUpdate();
+    } catch (err) {
+      const message = isAxiosError(err)
+        ? err.response?.data?.message ?? "Erro ao atualizar parcela"
+        : "Erro ao atualizar parcela";
+      toast.error(message);
+    } finally {
+      setMarkingId(null);
     }
   }
 
@@ -79,7 +87,7 @@ export function InstallmentsCard({
           {installments.map((inst) => {
             const config = statusConfig[inst.status];
             const StatusIcon = config.icon;
-            const isCurrent = inst.id === currentInstallmentId;
+            const isMarkingThis = markingId === inst.id;
 
             return (
               <li
@@ -87,8 +95,8 @@ export function InstallmentsCard({
                 className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
               >
                 <div className="flex items-center gap-3">
-                  <span className={`text-sm font-medium ${isCurrent ? "text-primary" : "text-foreground"}`}>
-                    Parcela {inst.installmentNumber}/{inst.installmentCount}
+                  <span className="text-sm font-medium">
+                    Parcela {inst.installmentNumber}/{totalCount}
                   </span>
                   <Badge variant={config.variant} className="gap-1">
                     <StatusIcon className="size-3" />
@@ -100,8 +108,19 @@ export function InstallmentsCard({
                     {formatDate(inst.dueDate)}
                   </span>
                   <span className="text-sm font-semibold">
-                    {formatCurrency(inst.installmentAmount)}
+                    {formatCurrency(inst.amount)}
                   </span>
+                  {inst.status !== "PAID" && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleMarkOnePaid(inst.id)}
+                      disabled={isMarkingThis || markingAll}
+                      className="text-xs"
+                    >
+                      {isMarkingThis ? "..." : "Marcar pago"}
+                    </Button>
+                  )}
                 </div>
               </li>
             );

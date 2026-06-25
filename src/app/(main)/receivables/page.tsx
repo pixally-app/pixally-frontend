@@ -13,8 +13,9 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
-import { Clock, CheckCircle2, AlertTriangle, Plus, ChevronRight, Wallet } from "lucide-react";
+import { Plus, ChevronRight, Wallet, Clock, CheckCircle2, AlertTriangle } from "lucide-react";
 import { ReceivableFormDialog } from "@/components/receivables/receivable-form-dialog";
+import { statusConfig } from "@/components/receivables/status-config";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import {
   listReceivables,
@@ -25,20 +26,11 @@ import {
 import { isAxiosError } from "axios";
 import { toast } from "sonner";
 
-const statusConfig: Record<
-  AccountReceivableStatus,
-  { label: string; variant: "warning" | "success" | "destructive"; icon: typeof Clock }
-> = {
-  pendente: { label: "Pendente", variant: "warning", icon: Clock },
-  pago: { label: "Pago", variant: "success", icon: CheckCircle2 },
-  vencido: { label: "Vencido", variant: "destructive", icon: AlertTriangle },
-};
-
 const filters = [
   { label: "Todos", value: "all" },
-  { label: "Pendentes", value: "pendente" },
-  { label: "Pagos", value: "pago" },
-  { label: "Vencidos", value: "vencido" },
+  { label: "Pendentes", value: "PENDING" },
+  { label: "Pagos", value: "PAID" },
+  { label: "Vencidos", value: "OVERDUE" },
 ] as const;
 
 type FilterValue = (typeof filters)[number]["value"];
@@ -80,9 +72,9 @@ export default function ReceivablesPage() {
     let vencido = 0;
 
     for (const r of receivables) {
-      if (r.status === "pendente") pendente += r.totalAmount;
-      else if (r.status === "pago") pago += r.totalAmount;
-      else if (r.status === "vencido") vencido += r.totalAmount;
+      if (r.status === "PENDING") pendente += r.totalAmount;
+      else if (r.status === "PAID") pago += r.totalAmount;
+      else if (r.status === "OVERDUE") vencido += r.totalAmount;
     }
 
     return { pendente, pago, vencido };
@@ -96,9 +88,8 @@ export default function ReceivablesPage() {
     installments: number;
     dueDate: string;
   }) {
-    const totalAmount = parseFloat(data.amount.replace(/\./g, "").replace(",", "."));
+    const totalAmount = parseFloat(data.amount);
     const installmentCount = data.installments > 1 ? data.installments : undefined;
-    const installmentAmount = installmentCount ? totalAmount / installmentCount : undefined;
 
     await createReceivable({
       clientId: data.clientId,
@@ -106,7 +97,6 @@ export default function ReceivablesPage() {
       serviceDescription: data.description || undefined,
       totalAmount,
       installmentCount,
-      installmentAmount,
       dueDate: data.dueDate,
     });
 

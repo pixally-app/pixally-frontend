@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { receivableSchema, type ReceivableFormValues } from "@/schemas/receivable";
-import { Input } from "@/components/ui/input";
+import { Input, inputBaseClasses } from "@/components/ui/input";
+import CurrencyInput from "react-currency-input-field";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -74,7 +75,7 @@ export function ReceivableFormDialog({
   const amount = watch("amount");
   const installments = watch("installments");
 
-  const amountNumber = parseFloat((amount || "").replace(/\./g, "").replace(",", ".")) || 0;
+  const amountNumber = parseFloat(amount || "0") || 0;
   const installmentValue =
     isInstallment && installments > 1 ? amountNumber / installments : 0;
 
@@ -161,12 +162,18 @@ export function ReceivableFormDialog({
 
             <div className="space-y-2">
               <Label htmlFor="receivable-amount">Valor Total (R$)</Label>
-              <Input
+              <CurrencyInput
                 id="receivable-amount"
-                placeholder="0,00"
+                placeholder="R$ 0,00"
+                intlConfig={{ locale: "pt-BR", currency: "BRL" }}
+                decimalsLimit={2}
+                value={amount}
+                onValueChange={(_val, _name, values) =>
+                  setValue("amount", values?.float?.toString() ?? "", { shouldValidate: true })
+                }
                 aria-invalid={!!errors.amount}
                 aria-describedby={errors.amount ? "receivable-amount-error" : undefined}
-                {...register("amount")}
+                className={inputBaseClasses}
               />
               <FormErrorMessage id="receivable-amount-error" message={errors.amount?.message} />
             </div>

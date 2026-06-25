@@ -1,5 +1,5 @@
-export function formatCurrency(cents: number) {
-  return (cents / 100).toLocaleString("pt-BR", {
+export function formatCurrency(value: number) {
+  return value.toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
   });

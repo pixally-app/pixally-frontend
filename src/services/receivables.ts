@@ -1,6 +1,17 @@
 import { api } from "./api";
 
-export type AccountReceivableStatus = "pendente" | "pago" | "vencido";
+export type AccountReceivableStatus = "PENDING" | "PAID" | "OVERDUE" | "CANCELLED";
+
+export interface Installment {
+  id: string;
+  installmentNumber: number;
+  amount: number;
+  dueDate: string;
+  status: AccountReceivableStatus;
+  paidAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface AccountReceivable {
   id: string;
@@ -11,15 +22,13 @@ export interface AccountReceivable {
   serviceName: string | null;
   serviceDescription: string | null;
   totalAmount: number;
-  installmentGroupId: string | null;
   installmentCount: number | null;
-  installmentNumber: number | null;
-  installmentAmount: number;
   dueDate: string;
   status: AccountReceivableStatus;
   paidAt: string | null;
   payStub: string | null;
   matchedAutomatically: boolean | null;
+  installments?: Installment[];
   createdAt: string;
   updatedAt: string;
 }
@@ -35,7 +44,6 @@ export interface PaginatedReceivables {
 export interface ListReceivablesParams {
   status?: AccountReceivableStatus;
   clientId?: string;
-  installmentGroupId?: string;
   page?: number;
   limit?: number;
 }
@@ -46,10 +54,7 @@ export interface CreateReceivableData {
   serviceName?: string;
   serviceDescription?: string;
   totalAmount: number;
-  installmentGroupId?: string;
   installmentCount?: number;
-  installmentNumber?: number;
-  installmentAmount?: number;
   dueDate: string;
   payStub?: string;
 }
@@ -59,9 +64,6 @@ export interface UpdateReceivableData {
   serviceName?: string;
   serviceDescription?: string;
   totalAmount?: number;
-  installmentCount?: number;
-  installmentNumber?: number;
-  installmentAmount?: number;
   dueDate?: string;
   paidAt?: string;
   payStub?: string;
@@ -87,8 +89,14 @@ export async function updateReceivable(id: string, data: UpdateReceivableData): 
   return response.data;
 }
 
-export async function markInstallmentGroupAsPaid(groupId: string): Promise<void> {
-  await api.patch(`/accounts-receivable/group/${groupId}/mark-paid`);
+export async function markAllInstallmentsAsPaid(accountReceivableId: string): Promise<AccountReceivable> {
+  const response = await api.patch<AccountReceivable>(`/accounts-receivable/${accountReceivableId}/installments/mark-all-paid`);
+  return response.data;
+}
+
+export async function markInstallmentAsPaid(accountReceivableId: string, installmentId: string): Promise<AccountReceivable> {
+  const response = await api.patch<AccountReceivable>(`/accounts-receivable/${accountReceivableId}/installments/${installmentId}/mark-paid`);
+  return response.data;
 }
 
 export async function deleteReceivable(id: string): Promise<void> {

@@ -2,26 +2,18 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Clock, CheckCircle2, AlertTriangle, FileText } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { getReceivable, updateReceivable, listReceivables, type AccountReceivable, type AccountReceivableStatus } from "@/services/receivables";
+import { getReceivable, updateReceivable, type AccountReceivable } from "@/services/receivables";
 import { ReceivableEditDialog } from "@/components/receivables/receivable-edit-dialog";
 import { DueDateField } from "@/components/receivables/due-date-field";
 import { InstallmentsCard } from "@/components/receivables/installments-card";
+import { statusConfig } from "@/components/receivables/status-config";
 import { isAxiosError } from "axios";
 import { toast } from "sonner";
-
-const statusConfig: Record<
-  AccountReceivableStatus,
-  { label: string; variant: "warning" | "success" | "destructive"; icon: typeof Clock }
-> = {
-  pendente: { label: "Pendente", variant: "warning", icon: Clock },
-  pago: { label: "Pago", variant: "success", icon: CheckCircle2 },
-  vencido: { label: "Vencido", variant: "destructive", icon: AlertTriangle },
-};
 
 export default function ReceivableDetailsPage({
   params,
@@ -30,24 +22,18 @@ export default function ReceivableDetailsPage({
 }) {
   const { id } = use(params);
   const [receivable, setReceivable] = useState<AccountReceivable | null>(null);
-  const [installments, setInstallments] = useState<AccountReceivable[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [markingPaid, setMarkingPaid] = useState(false);
 
-  async function fetchInstallments(groupId: string) {
-    const res = await listReceivables({ installmentGroupId: groupId, limit: 100 });
-    setInstallments(
-      [...res.data].sort((a, b) => (a.installmentNumber ?? 0) - (b.installmentNumber ?? 0))
-    );
+  async function fetchReceivable() {
+    const r = await getReceivable(id);
+    setReceivable(r);
   }
 
   useEffect(() => {
     getReceivable(id)
-      .then(async (r) => {
-        setReceivable(r);
-        if (r.installmentGroupId) await fetchInstallments(r.installmentGroupId);
-      })
+      .then((r) => setReceivable(r))
       .catch((err) => {
         if (isAxiosError(err) && err.response?.status === 404) {
           setNotFound(true);
@@ -96,8 +82,7 @@ export default function ReceivableDetailsPage({
   }) {
     try {
       await updateReceivable(id, data);
-      const updated = await getReceivable(id);
-      setReceivable(updated);
+      await fetchReceivable();
       toast.success("Conta atualizada com sucesso!");
     } catch (err) {
       const message = isAxiosError(err)
@@ -111,9 +96,8 @@ export default function ReceivableDetailsPage({
   async function handleMarkAsPaid() {
     try {
       setMarkingPaid(true);
-      const updated = await updateReceivable(id, { paidAt: new Date().toISOString() });
-      setReceivable(updated);
-      if (updated.installmentGroupId) await fetchInstallments(updated.installmentGroupId);
+      await updateReceivable(id, { paidAt: new Date().toISOString() });
+      await fetchReceivable();
       toast.success("Conta marcada como paga!");
     } catch (err) {
       const message = isAxiosError(err)
@@ -128,17 +112,17 @@ export default function ReceivableDetailsPage({
   const status = statusConfig[receivable.status];
   const StatusIcon = status.icon;
 
-  const isGroup = installments.length > 0;
-  const totalAmount = isGroup
-    ? installments.reduce((sum, i) => sum + i.installmentAmount, 0)
-    : receivable.totalAmount;
-  const amountPaid = isGroup
-    ? installments.filter((i) => i.paidAt).reduce((sum, i) => sum + i.installmentAmount, 0)
+  const installments = receivable.installments ?? [];
+  const isInstallment = installments.length > 0;
+
+  const totalAmount = receivable.totalAmount;
+  const amountPaid = isInstallment
+    ? installments.filter((i) => i.paidAt).reduce((sum, i) => sum + i.amount, 0)
     : receivable.paidAt ? receivable.totalAmount : 0;
   const remaining = totalAmount - amountPaid;
   const progressPercent = totalAmount > 0 ? Math.round((amountPaid / totalAmount) * 100) : 0;
-  const paidCount = isGroup ? installments.filter((i) => i.paidAt).length : null;
-  const totalCount = isGroup ? installments.length : null;
+  const paidCount = isInstallment ? installments.filter((i) => i.paidAt).length : null;
+  const totalCount = isInstallment ? installments.length : null;
 
   return (
     <div className="space-y-6">
@@ -189,7 +173,7 @@ export default function ReceivableDetailsPage({
                     </Badge>
                   </dd>
                 </div>
-                {isGroup && (
+                {isInstallment && (
                   <div>
                     <dt className="text-sm text-muted-foreground">Parcelas pagas</dt>
                     <dd className="text-sm font-medium">{paidCount}/{totalCount}</dd>
@@ -230,10 +214,10 @@ export default function ReceivableDetailsPage({
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">
-                    {isGroup ? "Parcelas pagas" : "Progresso"}
+                    {isInstallment ? "Parcelas pagas" : "Progresso"}
                   </span>
                   <span className="font-medium">
-                    {isGroup ? `${paidCount}/${totalCount}` : `${progressPercent}%`}
+                    {isInstallment ? `${paidCount}/${totalCount}` : `${progressPercent}%`}
                   </span>
                 </div>
                 <div className="h-2.5 rounded-full bg-muted overflow-hidden">
@@ -244,7 +228,7 @@ export default function ReceivableDetailsPage({
                 </div>
               </div>
 
-              {receivable.status !== "pago" && (
+              {!isInstallment && receivable.status !== "PAID" && (
                 <Button
                   className="w-full"
                   onClick={handleMarkAsPaid}
@@ -259,16 +243,11 @@ export default function ReceivableDetailsPage({
         </div>
       </div>
 
-      {receivable.installmentGroupId && (
+      {isInstallment && (
         <InstallmentsCard
           installments={installments}
-          installmentGroupId={receivable.installmentGroupId}
-          currentInstallmentId={receivable.id}
-          onAllPaid={async () => {
-            const updated = await getReceivable(id);
-            setReceivable(updated);
-            if (updated.installmentGroupId) await fetchInstallments(updated.installmentGroupId);
-          }}
+          accountReceivableId={receivable.id}
+          onUpdate={fetchReceivable}
         />
       )}
 

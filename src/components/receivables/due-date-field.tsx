@@ -6,23 +6,25 @@ import { type AccountReceivableStatus } from "@/services/receivables";
 const containerVariants = cva("rounded-lg border px-4 py-3", {
   variants: {
     status: {
-      pendente: "bg-muted/40",
-      vencido: "bg-destructive/10 border-destructive/30",
-      pago: "bg-success/10 border-success/30",
+      PENDING: "bg-muted/40",
+      OVERDUE: "bg-destructive/10 border-destructive/30",
+      PAID: "bg-success/10 border-success/30",
+      CANCELLED: "bg-muted/40",
     },
   },
-  defaultVariants: { status: "pendente" },
+  defaultVariants: { status: "PENDING" },
 });
 
 const textVariants = cva("text-lg font-bold", {
   variants: {
     status: {
-      pendente: "text-foreground",
-      vencido: "text-destructive",
-      pago: "text-success",
+      PENDING: "text-foreground",
+      OVERDUE: "text-destructive",
+      PAID: "text-success",
+      CANCELLED: "text-muted-foreground",
     },
   },
-  defaultVariants: { status: "pendente" },
+  defaultVariants: { status: "PENDING" },
 });
 
 interface DueDateFieldProps {
