@@ -75,7 +75,7 @@ export function ReceivableFormDialog({
   const amount = watch("amount");
   const installments = watch("installments");
 
-  const amountNumber = parseFloat(amount || "0") || 0;
+  const amountNumber = parseFloat((amount || "0").replace(/\./g, "").replace(",", ".")) || 0;
   const installmentValue =
     isInstallment && installments > 1 ? amountNumber / installments : 0;
 
@@ -168,8 +168,8 @@ export function ReceivableFormDialog({
                 intlConfig={{ locale: "pt-BR", currency: "BRL" }}
                 decimalsLimit={2}
                 value={amount}
-                onValueChange={(_val, _name, values) =>
-                  setValue("amount", values?.float?.toString() ?? "", { shouldValidate: true })
+                onValueChange={(val) =>
+                  setValue("amount", val ?? "", { shouldValidate: true })
                 }
                 aria-invalid={!!errors.amount}
                 aria-describedby={errors.amount ? "receivable-amount-error" : undefined}

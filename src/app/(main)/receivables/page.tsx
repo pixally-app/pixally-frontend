@@ -88,7 +88,7 @@ export default function ReceivablesPage() {
     installments: number;
     dueDate: string;
   }) {
-    const totalAmount = parseFloat(data.amount);
+    const totalAmount = parseFloat(data.amount.replace(/\./g, "").replace(",", "."));
     const installmentCount = data.installments > 1 ? data.installments : undefined;
 
     await createReceivable({

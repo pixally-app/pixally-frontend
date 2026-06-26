@@ -71,7 +71,7 @@ export function ReceivableEditDialog({ receivable, onSubmit }: ReceivableEditDia
       reset({
         serviceName: receivable.serviceName ?? "",
         serviceDescription: receivable.serviceDescription ?? "",
-        totalAmount: receivable.totalAmount.toString(),
+        totalAmount: receivable.totalAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
         dueDate: receivable.dueDate.split("T")[0],
       });
     }
@@ -80,7 +80,7 @@ export function ReceivableEditDialog({ receivable, onSubmit }: ReceivableEditDia
   async function onFormSubmit(data: EditFormValues) {
     try {
       setSubmitting(true);
-      const totalAmount = parseFloat(data.totalAmount);
+      const totalAmount = parseFloat(data.totalAmount.replace(/\./g, "").replace(",", "."));
       await onSubmit({
         serviceName: data.serviceName,
         serviceDescription: data.serviceDescription || undefined,
@@ -138,8 +138,8 @@ export function ReceivableEditDialog({ receivable, onSubmit }: ReceivableEditDia
                 intlConfig={{ locale: "pt-BR", currency: "BRL" }}
                 decimalsLimit={2}
                 value={watch("totalAmount")}
-                onValueChange={(_val, _name, values) =>
-                  setValue("totalAmount", values?.float?.toString() ?? "", { shouldValidate: true })
+                onValueChange={(val) =>
+                  setValue("totalAmount", val ?? "", { shouldValidate: true })
                 }
                 aria-invalid={!!errors.totalAmount}
                 aria-describedby={errors.totalAmount ? "edit-amount-error" : undefined}
