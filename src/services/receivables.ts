@@ -89,6 +89,16 @@ export async function updateReceivable(id: string, data: UpdateReceivableData): 
   return response.data;
 }
 
+export interface UpdateInstallmentData {
+  amount?: number;
+  dueDate?: string;
+}
+
+export async function updateInstallment(accountReceivableId: string, installmentId: string, data: UpdateInstallmentData): Promise<AccountReceivable> {
+  const response = await api.patch<AccountReceivable>(`/accounts-receivable/${accountReceivableId}/installments/${installmentId}`, data);
+  return response.data;
+}
+
 export async function markAllInstallmentsAsPaid(accountReceivableId: string): Promise<AccountReceivable> {
   const response = await api.patch<AccountReceivable>(`/accounts-receivable/${accountReceivableId}/installments/mark-all-paid`);
   return response.data;

@@ -12,6 +12,7 @@ import {
   type Installment,
 } from "@/services/receivables";
 import { statusConfig } from "@/components/receivables/status-config";
+import { InstallmentEditDialog } from "@/components/receivables/installment-edit-dialog";
 import { isAxiosError } from "axios";
 import { toast } from "sonner";
 
@@ -96,7 +97,15 @@ export function InstallmentsCard({
                 key={inst.id}
                 className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  {inst.status !== "PAID" && !isCancelled && (
+                    <InstallmentEditDialog
+                      installment={inst}
+                      totalCount={totalCount}
+                      accountReceivableId={accountReceivableId}
+                      onUpdate={onUpdate}
+                    />
+                  )}
                   <span className="text-sm font-medium">
                     Parcela {inst.installmentNumber}/{totalCount}
                   </span>

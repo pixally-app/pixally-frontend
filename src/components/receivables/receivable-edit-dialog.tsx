@@ -31,12 +31,12 @@ const editSchema = z.object({
     .string()
     .min(1, "Valor é obrigatório")
     .refine(
-      (val) => /^\d{1,3}(\.\d{3})*(,\d{1,2})?$|^\d+(,\d{1,2})?$/.test(val.trim()),
+      (val) => /^\d+(\.\d{1,2})?$/.test(val.trim()),
       { message: "Formato de valor inválido" }
     )
     .refine(
       (val) => {
-        const num = parseFloat(val.trim().replace(/\./g, "").replace(",", "."));
+        const num = parseFloat(val.trim());
         return !isNaN(num) && num > 0;
       },
       { message: "Valor deve ser maior que zero" }
@@ -71,7 +71,7 @@ export function ReceivableEditDialog({ receivable, onSubmit }: ReceivableEditDia
       reset({
         serviceName: receivable.serviceName ?? "",
         serviceDescription: receivable.serviceDescription ?? "",
-        totalAmount: receivable.totalAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+        totalAmount: receivable.totalAmount.toString(),
         dueDate: receivable.dueDate.split("T")[0],
       });
     }
@@ -80,7 +80,7 @@ export function ReceivableEditDialog({ receivable, onSubmit }: ReceivableEditDia
   async function onFormSubmit(data: EditFormValues) {
     try {
       setSubmitting(true);
-      const totalAmount = parseFloat(data.totalAmount.replace(/\./g, "").replace(",", "."));
+      const totalAmount = parseFloat(data.totalAmount);
       await onSubmit({
         serviceName: data.serviceName,
         serviceDescription: data.serviceDescription || undefined,
@@ -138,8 +138,8 @@ export function ReceivableEditDialog({ receivable, onSubmit }: ReceivableEditDia
                 intlConfig={{ locale: "pt-BR", currency: "BRL" }}
                 decimalsLimit={2}
                 value={watch("totalAmount")}
-                onValueChange={(val) =>
-                  setValue("totalAmount", val ?? "", { shouldValidate: true })
+                onValueChange={(_val, _name, values) =>
+                  setValue("totalAmount", values?.float?.toString() ?? "", { shouldValidate: true })
                 }
                 aria-invalid={!!errors.totalAmount}
                 aria-describedby={errors.totalAmount ? "edit-amount-error" : undefined}
