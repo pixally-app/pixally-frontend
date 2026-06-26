@@ -99,6 +99,11 @@ export async function markInstallmentAsPaid(accountReceivableId: string, install
   return response.data;
 }
 
+export async function cancelReceivable(id: string): Promise<AccountReceivable> {
+  const response = await api.patch<AccountReceivable>(`/accounts-receivable/${id}/cancel`);
+  return response.data;
+}
+
 export async function deleteReceivable(id: string): Promise<void> {
   await api.delete(`/accounts-receivable/${id}`);
 }

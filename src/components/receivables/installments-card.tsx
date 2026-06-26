@@ -18,12 +18,14 @@ import { toast } from "sonner";
 interface InstallmentsCardProps {
   installments: Installment[];
   accountReceivableId: string;
+  isCancelled?: boolean;
   onUpdate: () => Promise<void>;
 }
 
 export function InstallmentsCard({
   installments,
   accountReceivableId,
+  isCancelled = false,
   onUpdate,
 }: InstallmentsCardProps) {
   const [markingAll, setMarkingAll] = useState(false);
@@ -70,7 +72,7 @@ export function InstallmentsCard({
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg font-bold">Parcelas</CardTitle>
-        {!allPaid && (
+        {!allPaid && !isCancelled && (
           <Button
             size="sm"
             variant="outline"
@@ -110,7 +112,7 @@ export function InstallmentsCard({
                   <span className="text-sm font-semibold">
                     {formatCurrency(inst.amount)}
                   </span>
-                  {inst.status !== "PAID" && (
+                  {inst.status !== "PAID" && !isCancelled && (
                     <Button
                       size="sm"
                       variant="outline"

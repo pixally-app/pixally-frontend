@@ -2,16 +2,17 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, CheckCircle2, FileText } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, XCircle, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { getReceivable, updateReceivable, type AccountReceivable } from "@/services/receivables";
+import { getReceivable, updateReceivable, cancelReceivable, type AccountReceivable } from "@/services/receivables";
 import { ReceivableEditDialog } from "@/components/receivables/receivable-edit-dialog";
 import { DueDateField } from "@/components/receivables/due-date-field";
 import { InstallmentsCard } from "@/components/receivables/installments-card";
 import { statusConfig } from "@/components/receivables/status-config";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { isAxiosError } from "axios";
 import { toast } from "sonner";
 
@@ -25,6 +26,7 @@ export default function ReceivableDetailsPage({
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [markingPaid, setMarkingPaid] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   async function fetchReceivable() {
     const r = await getReceivable(id);
@@ -93,6 +95,22 @@ export default function ReceivableDetailsPage({
     }
   }
 
+  async function handleCancel() {
+    try {
+      setCancelling(true);
+      await cancelReceivable(id);
+      await fetchReceivable();
+      toast.success("Conta cancelada com sucesso!");
+    } catch (err) {
+      const message = isAxiosError(err)
+        ? err.response?.data?.message ?? "Erro ao cancelar conta"
+        : "Erro ao cancelar conta";
+      toast.error(message);
+    } finally {
+      setCancelling(false);
+    }
+  }
+
   async function handleMarkAsPaid() {
     try {
       setMarkingPaid(true);
@@ -142,7 +160,9 @@ export default function ReceivableDetailsPage({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg font-bold">Informações</CardTitle>
-              <ReceivableEditDialog receivable={receivable} onSubmit={handleEdit} />
+              {receivable.status !== "CANCELLED" && (
+                <ReceivableEditDialog receivable={receivable} onSubmit={handleEdit} />
+              )}
             </CardHeader>
             <CardContent>
               <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
@@ -228,7 +248,7 @@ export default function ReceivableDetailsPage({
                 </div>
               </div>
 
-              {!isInstallment && receivable.status !== "PAID" && (
+              {!isInstallment && receivable.status !== "PAID" && receivable.status !== "CANCELLED" && (
                 <Button
                   className="w-full"
                   onClick={handleMarkAsPaid}
@@ -237,6 +257,26 @@ export default function ReceivableDetailsPage({
                   <CheckCircle2 className="size-4" />
                   {markingPaid ? "Salvando..." : "Marcar como Pago"}
                 </Button>
+              )}
+
+              {receivable.status !== "CANCELLED" && receivable.status !== "PAID" && (
+                <ConfirmDialog
+                  trigger={
+                    <Button
+                      variant="destructive"
+                      className="w-full"
+                      disabled={cancelling}
+                    >
+                      <XCircle className="size-4" />
+                      {cancelling ? "Cancelando..." : "Cancelar Conta"}
+                    </Button>
+                  }
+                  title="Cancelar conta a receber"
+                  description="Tem certeza que deseja cancelar esta conta? Esta ação não pode ser desfeita."
+                  confirmLabel="Sim, cancelar"
+                  variant="destructive"
+                  onConfirm={handleCancel}
+                />
               )}
             </CardContent>
           </Card>
@@ -247,6 +287,7 @@ export default function ReceivableDetailsPage({
         <InstallmentsCard
           installments={installments}
           accountReceivableId={receivable.id}
+          isCancelled={receivable.status === "CANCELLED"}
           onUpdate={fetchReceivable}
         />
       )}
