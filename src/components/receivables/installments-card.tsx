@@ -122,15 +122,27 @@ export function InstallmentsCard({
                     {formatCurrency(inst.amount)}
                   </span>
                   {inst.status !== "PAID" && !isCancelled && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleMarkOnePaid(inst.id)}
-                      disabled={isMarkingThis || markingAll}
-                      className="text-xs"
-                    >
-                      {isMarkingThis ? "..." : "Marcar pago"}
-                    </Button>
+                    <>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => handleMarkOnePaid(inst.id)}
+                        disabled={isMarkingThis || markingAll}
+                        className="size-7 sm:hidden"
+                        title="Marcar como pago"
+                      >
+                        <CheckCircle2 className="size-3.5" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleMarkOnePaid(inst.id)}
+                        disabled={isMarkingThis || markingAll}
+                        className="text-xs hidden sm:inline-flex"
+                      >
+                        {isMarkingThis ? "..." : "Marcar pago"}
+                      </Button>
+                    </>
                   )}
                 </div>
               </li>

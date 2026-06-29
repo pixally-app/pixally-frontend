@@ -31,6 +31,7 @@ const filters = [
   { label: "Pendentes", value: "PENDING" },
   { label: "Pagos", value: "PAID" },
   { label: "Vencidos", value: "OVERDUE" },
+  { label: "Cancelados", value: "CANCELLED" },
 ] as const;
 
 type FilterValue = (typeof filters)[number]["value"];
@@ -91,17 +92,24 @@ export default function ReceivablesPage() {
     const totalAmount = parseFloat(data.amount);
     const installmentCount = data.installments > 1 ? data.installments : undefined;
 
-    await createReceivable({
-      clientId: data.clientId,
-      serviceName: data.serviceName || undefined,
-      serviceDescription: data.description || undefined,
-      totalAmount,
-      installmentCount,
-      dueDate: data.dueDate,
-    });
-
-    toast.success("Conta a receber criada com sucesso!");
-    fetchReceivables();
+    try {
+      await createReceivable({
+        clientId: data.clientId,
+        serviceName: data.serviceName || undefined,
+        serviceDescription: data.description || undefined,
+        totalAmount,
+        installmentCount,
+        dueDate: data.dueDate,
+      });
+      toast.success("Conta a receber criada com sucesso!");
+      fetchReceivables();
+    } catch (err) {
+      const message = isAxiosError(err)
+        ? err.response?.data?.message ?? "Erro ao criar conta a receber"
+        : "Erro ao criar conta a receber";
+      toast.error(message);
+      throw err;
+    }
   }
 
   return (
@@ -152,7 +160,7 @@ export default function ReceivablesPage() {
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2">
+        <div className="grid grid-cols-3 sm:flex sm:flex-row gap-2">
           {filters.map((f) => (
             <Button
               key={f.value}
