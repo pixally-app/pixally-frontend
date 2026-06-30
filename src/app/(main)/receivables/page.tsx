@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,25 +13,25 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
-import { Clock, CheckCircle2, AlertTriangle, Plus, ChevronRight, Wallet } from "lucide-react";
-import { receivables, type ReceivableStatus } from "@/data/mock-receivables";
+import { Plus, ChevronRight, Wallet, Clock, CheckCircle2, AlertTriangle } from "lucide-react";
 import { ReceivableFormDialog } from "@/components/receivables/receivable-form-dialog";
+import { statusConfig } from "@/components/receivables/status-config";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-
-const statusConfig: Record<
-  ReceivableStatus,
-  { label: string; variant: "warning" | "success" | "destructive"; icon: typeof Clock }
-> = {
-  pending: { label: "Pendente", variant: "warning", icon: Clock },
-  reconciled: { label: "Conciliado", variant: "success", icon: CheckCircle2 },
-  overdue: { label: "Vencido", variant: "destructive", icon: AlertTriangle },
-};
+import {
+  listReceivables,
+  createReceivable,
+  type AccountReceivable,
+  type AccountReceivableStatus,
+} from "@/services/receivables";
+import { isAxiosError } from "axios";
+import { toast } from "sonner";
 
 const filters = [
   { label: "Todos", value: "all" },
-  { label: "Pendentes", value: "pending" },
-  { label: "Conciliados", value: "reconciled" },
-  { label: "Vencidos", value: "overdue" },
+  { label: "Pendentes", value: "PENDING" },
+  { label: "Pagos", value: "PAID" },
+  { label: "Vencidos", value: "OVERDUE" },
+  { label: "Cancelados", value: "CANCELLED" },
 ] as const;
 
 type FilterValue = (typeof filters)[number]["value"];
@@ -39,25 +39,78 @@ type FilterValue = (typeof filters)[number]["value"];
 export default function ReceivablesPage() {
   const router = useRouter();
   const [filter, setFilter] = useState<FilterValue>("all");
+  const [receivables, setReceivables] = useState<AccountReceivable[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filtered = useMemo(() => {
-    if (filter === "all") return receivables;
-    return receivables.filter((r) => r.status === filter);
+  const fetchReceivables = useCallback(async () => {
+    try {
+      setLoading(true);
+      const params = filter !== "all" ? { status: filter as AccountReceivableStatus, limit: 100 } : { limit: 100 };
+      const response = await listReceivables(params);
+      setReceivables(response.data);
+    } catch (err) {
+      const message = isAxiosError(err)
+        ? err.response?.data?.message ?? "Erro ao carregar contas a receber"
+        : "Erro ao carregar contas a receber";
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
   }, [filter]);
 
+  useEffect(() => {
+    fetchReceivables();
+  }, [fetchReceivables]);
+
+  const sortedReceivables = useMemo(
+    () => [...receivables].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [receivables]
+  );
+
   const summary = useMemo(() => {
-    let pending = 0;
-    let reconciled = 0;
-    let overdue = 0;
+    let pendente = 0;
+    let pago = 0;
+    let vencido = 0;
 
     for (const r of receivables) {
-      if (r.status === "pending") pending += r.totalAmount;
-      else if (r.status === "reconciled") reconciled += r.totalAmount;
-      else if (r.status === "overdue") overdue += r.totalAmount;
+      if (r.status === "PENDING") pendente += r.totalAmount;
+      else if (r.status === "PAID") pago += r.totalAmount;
+      else if (r.status === "OVERDUE") vencido += r.totalAmount;
     }
 
-    return { pending, reconciled, overdue };
-  }, []);
+    return { pendente, pago, vencido };
+  }, [receivables]);
+
+  async function handleCreate(data: {
+    serviceName: string;
+    description: string;
+    clientId: string;
+    amount: string;
+    installments: number;
+    dueDate: string;
+  }) {
+    const totalAmount = parseFloat(data.amount);
+    const installmentCount = data.installments > 1 ? data.installments : undefined;
+
+    try {
+      await createReceivable({
+        clientId: data.clientId,
+        serviceName: data.serviceName || undefined,
+        serviceDescription: data.description || undefined,
+        totalAmount,
+        installmentCount,
+        dueDate: data.dueDate,
+      });
+      toast.success("Conta a receber criada com sucesso!");
+      fetchReceivables();
+    } catch (err) {
+      const message = isAxiosError(err)
+        ? err.response?.data?.message ?? "Erro ao criar conta a receber"
+        : "Erro ao criar conta a receber";
+      toast.error(message);
+      throw err;
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -76,7 +129,7 @@ export default function ReceivablesPage() {
               <Clock className="size-5 text-warning" />
             </div>
             <p className="text-2xl font-bold text-warning">
-              {formatCurrency(summary.pending)}
+              {formatCurrency(summary.pendente)}
             </p>
           </CardContent>
         </Card>
@@ -84,11 +137,11 @@ export default function ReceivablesPage() {
         <Card>
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Conciliado</span>
+              <span className="text-sm text-muted-foreground">Pago</span>
               <CheckCircle2 className="size-5 text-success" />
             </div>
             <p className="text-2xl font-bold text-success">
-              {formatCurrency(summary.reconciled)}
+              {formatCurrency(summary.pago)}
             </p>
           </CardContent>
         </Card>
@@ -100,14 +153,14 @@ export default function ReceivablesPage() {
               <AlertTriangle className="size-5 text-destructive" />
             </div>
             <p className="text-2xl font-bold text-destructive">
-              {formatCurrency(summary.overdue)}
+              {formatCurrency(summary.vencido)}
             </p>
           </CardContent>
         </Card>
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2">
+        <div className="grid grid-cols-3 sm:flex sm:flex-row gap-2">
           {filters.map((f) => (
             <Button
               key={f.value}
@@ -127,10 +180,7 @@ export default function ReceivablesPage() {
               Nova Conta a Receber
             </Button>
           }
-          onSubmit={(data) => {
-            // TODO: integrar com API
-            console.log(data);
-          }}
+          onSubmit={handleCreate}
         />
       </div>
 
@@ -138,7 +188,7 @@ export default function ReceivablesPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Descrição</TableHead>
+              <TableHead>Serviço</TableHead>
               <TableHead>Cliente</TableHead>
               <TableHead>Valor</TableHead>
               <TableHead className="hidden sm:table-cell">Vencimento</TableHead>
@@ -147,7 +197,13 @@ export default function ReceivablesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.length === 0 ? (
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="h-32 text-center text-muted-foreground text-sm">
+                  Carregando...
+                </TableCell>
+              </TableRow>
+            ) : receivables.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="h-32 text-center">
                   <div className="flex flex-col items-center gap-2 text-muted-foreground">
@@ -157,7 +213,7 @@ export default function ReceivablesPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((r) => {
+              sortedReceivables.map((r) => {
                 const config = statusConfig[r.status];
                 const StatusIcon = config.icon;
 
@@ -176,9 +232,9 @@ export default function ReceivablesPage() {
                     }}
                   >
                     <TableCell className="font-medium">
-                      {r.descriptionService}
+                      {r.serviceName ?? "-"}
                     </TableCell>
-                    <TableCell>{r.clientName}</TableCell>
+                    <TableCell>{r.clientName ?? "-"}</TableCell>
                     <TableCell className="font-semibold text-primary">
                       {formatCurrency(r.totalAmount)}
                     </TableCell>

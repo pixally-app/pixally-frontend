@@ -9,13 +9,12 @@ export const receivableSchema = z
       .string()
       .min(1, "Valor é obrigatório")
       .refine(
-        (val) => /^\d{1,3}(\.\d{3})*(,\d{1,2})?$|^\d+(,\d{1,2})?$/.test(val.trim()),
+        (val) => /^\d+(\.\d{1,2})?$/.test(val.trim()),
         { message: "Formato de valor inválido" }
       )
       .refine(
         (val) => {
-          const normalized = val.trim().replace(/\./g, "").replace(",", ".");
-          const num = parseFloat(normalized);
+          const num = parseFloat(val.trim());
           return !isNaN(num) && num > 0;
         },
         { message: "Valor deve ser maior que zero" }

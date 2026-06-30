@@ -1,12 +1,12 @@
-export function formatCurrency(cents: number) {
-  return (cents / 100).toLocaleString("pt-BR", {
+export function formatCurrency(value: number) {
+  return value.toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
   });
 }
 
 export function formatDate(dateStr: string) {
-  const [year, month, day] = dateStr.split("-");
+  const [year, month, day] = dateStr.split("T")[0].split("-");
   return `${day}/${month}/${year}`;
 }
 
