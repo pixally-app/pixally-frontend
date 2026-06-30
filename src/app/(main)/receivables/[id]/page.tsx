@@ -1,30 +1,20 @@
 "use client";
 
-import { use } from "react";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Clock, CheckCircle2, AlertTriangle, FileText } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, XCircle, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui/table";
-import { receivables, type ReceivableStatus } from "@/data/mock-receivables";
-import { receipts, statusConfig as receiptStatusConfig } from "@/data/mock-receipts";
-import { formatCurrency, formatDate, formatDateTime } from "@/lib/formatters";
-
-const statusConfig: Record<
-  ReceivableStatus,
-  { label: string; variant: "warning" | "success" | "destructive"; icon: typeof Clock }
-> = {
-  pending: { label: "Pendente", variant: "warning", icon: Clock },
-  reconciled: { label: "Conciliado", variant: "success", icon: CheckCircle2 },
-  overdue: { label: "Vencido", variant: "destructive", icon: AlertTriangle },
-};
+import { Button } from "@/components/ui/button";
+import { formatCurrency, formatDate } from "@/lib/formatters";
+import { getReceivable, updateReceivable, cancelReceivable, type AccountReceivable } from "@/services/receivables";
+import { ReceivableEditDialog } from "@/components/receivables/receivable-edit-dialog";
+import { DueDateField } from "@/components/receivables/due-date-field";
+import { InstallmentsCard } from "@/components/receivables/installments-card";
+import { statusConfig } from "@/components/receivables/status-config";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { isAxiosError } from "axios";
+import { toast } from "sonner";
 
 export default function ReceivableDetailsPage({
   params,
@@ -32,9 +22,46 @@ export default function ReceivableDetailsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const receivable = receivables.find((r) => r.id === id);
+  const [receivable, setReceivable] = useState<AccountReceivable | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [markingPaid, setMarkingPaid] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
-  if (!receivable) {
+  async function fetchReceivable() {
+    const r = await getReceivable(id);
+    setReceivable(r);
+  }
+
+  useEffect(() => {
+    getReceivable(id)
+      .then((r) => setReceivable(r))
+      .catch((err) => {
+        if (isAxiosError(err) && err.response?.status === 404) {
+          setNotFound(true);
+        } else {
+          toast.error("Erro ao carregar conta a receber");
+        }
+      })
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Link
+          href="/receivables"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" />
+          Voltar
+        </Link>
+        <p className="text-muted-foreground text-sm">Carregando...</p>
+      </div>
+    );
+  }
+
+  if (notFound || !receivable) {
     return (
       <div className="space-y-6">
         <Link
@@ -49,15 +76,71 @@ export default function ReceivableDetailsPage({
     );
   }
 
-  const linkedReceipts = receivable.pixReceiptId
-    ? receipts.filter((r) => r.id === receivable.pixReceiptId)
-    : [];
+  async function handleEdit(data: {
+    serviceName: string;
+    serviceDescription?: string;
+    totalAmount: number;
+    dueDate: string;
+  }) {
+    try {
+      await updateReceivable(id, data);
+      await fetchReceivable();
+      toast.success("Conta atualizada com sucesso!");
+    } catch (err) {
+      const message = isAxiosError(err)
+        ? err.response?.data?.message ?? "Erro ao atualizar conta"
+        : "Erro ao atualizar conta";
+      toast.error(message);
+      throw err;
+    }
+  }
+
+  async function handleCancel() {
+    try {
+      setCancelling(true);
+      await cancelReceivable(id);
+      await fetchReceivable();
+      toast.success("Conta cancelada com sucesso!");
+    } catch (err) {
+      const message = isAxiosError(err)
+        ? err.response?.data?.message ?? "Erro ao cancelar conta"
+        : "Erro ao cancelar conta";
+      toast.error(message);
+    } finally {
+      setCancelling(false);
+    }
+  }
+
+  async function handleMarkAsPaid() {
+    try {
+      setMarkingPaid(true);
+      await updateReceivable(id, { paidAt: new Date().toISOString() });
+      await fetchReceivable();
+      toast.success("Conta marcada como paga!");
+    } catch (err) {
+      const message = isAxiosError(err)
+        ? err.response?.data?.message ?? "Erro ao atualizar conta"
+        : "Erro ao atualizar conta";
+      toast.error(message);
+    } finally {
+      setMarkingPaid(false);
+    }
+  }
+
   const status = statusConfig[receivable.status];
   const StatusIcon = status.icon;
-  const remaining = receivable.totalAmount - receivable.amountPaid;
-  const progressPercent = receivable.totalAmount > 0
-    ? Math.round((receivable.amountPaid / receivable.totalAmount) * 100)
-    : 0;
+
+  const installments = receivable.installments ?? [];
+  const isInstallment = installments.length > 0;
+
+  const totalAmount = receivable.totalAmount;
+  const amountPaid = isInstallment
+    ? installments.filter((i) => i.paidAt).reduce((sum, i) => sum + i.amount, 0)
+    : receivable.paidAt ? receivable.totalAmount : 0;
+  const remaining = totalAmount - amountPaid;
+  const progressPercent = totalAmount > 0 ? Math.round((amountPaid / totalAmount) * 100) : 0;
+  const paidCount = isInstallment ? installments.filter((i) => i.paidAt).length : null;
+  const totalCount = isInstallment ? installments.length : null;
 
   return (
     <div className="space-y-6">
@@ -70,34 +153,36 @@ export default function ReceivableDetailsPage({
           Voltar
         </Link>
         <h1 className="text-2xl font-bold">Detalhes da Conta a Receber</h1>
-        <p className="text-sm text-muted-foreground">
-          {receivable.descriptionService}
-        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg font-bold">Informações</CardTitle>
+              {receivable.status !== "CANCELLED" && (
+                <ReceivableEditDialog receivable={receivable} onSubmit={handleEdit} />
+              )}
             </CardHeader>
             <CardContent>
               <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
                 <div>
-                  <dt className="text-sm text-muted-foreground">Descrição</dt>
-                  <dd className="text-sm font-medium">{receivable.descriptionService}</dd>
+                  <dt className="text-sm text-muted-foreground">Serviço</dt>
+                  <dd className="text-sm font-medium">{receivable.serviceName ?? "-"}</dd>
                 </div>
+                {receivable.serviceDescription && (
+                  <div>
+                    <dt className="text-sm text-muted-foreground">Descrição</dt>
+                    <dd className="text-sm font-medium">{receivable.serviceDescription}</dd>
+                  </div>
+                )}
                 <div>
                   <dt className="text-sm text-muted-foreground">Cliente</dt>
-                  <dd className="text-sm font-medium">{receivable.clientName}</dd>
+                  <dd className="text-sm font-medium">{receivable.clientName ?? "-"}</dd>
                 </div>
                 <div>
                   <dt className="text-sm text-muted-foreground">Criado em</dt>
                   <dd className="text-sm font-medium">{formatDate(receivable.createdAt)}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-muted-foreground">Vencimento</dt>
-                  <dd className="text-sm font-medium">{formatDate(receivable.dueDate)}</dd>
                 </div>
                 <div>
                   <dt className="text-sm text-muted-foreground">Status</dt>
@@ -108,10 +193,21 @@ export default function ReceivableDetailsPage({
                     </Badge>
                   </dd>
                 </div>
+                {isInstallment && (
+                  <div>
+                    <dt className="text-sm text-muted-foreground">Parcelas pagas</dt>
+                    <dd className="text-sm font-medium">{paidCount}/{totalCount}</dd>
+                  </div>
+                )}
+                <div className="sm:col-span-2">
+                  <DueDateField
+                    date={formatDate(receivable.dueDate)}
+                    status={receivable.status}
+                  />
+                </div>
               </dl>
             </CardContent>
           </Card>
-
         </div>
 
         <div className="space-y-6">
@@ -123,11 +219,11 @@ export default function ReceivableDetailsPage({
               <dl className="space-y-3">
                 <div className="flex items-center justify-between">
                   <dt className="text-sm text-muted-foreground">Valor Total</dt>
-                  <dd className="text-sm font-semibold">{formatCurrency(receivable.totalAmount)}</dd>
+                  <dd className="text-sm font-semibold">{formatCurrency(totalAmount)}</dd>
                 </div>
                 <div className="flex items-center justify-between">
                   <dt className="text-sm text-muted-foreground">Valor Pago</dt>
-                  <dd className="text-sm font-semibold text-success">{formatCurrency(receivable.amountPaid)}</dd>
+                  <dd className="text-sm font-semibold text-success">{formatCurrency(amountPaid)}</dd>
                 </div>
                 <div className="flex items-center justify-between">
                   <dt className="text-sm text-muted-foreground">Restante</dt>
@@ -137,8 +233,12 @@ export default function ReceivableDetailsPage({
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Progresso</span>
-                  <span className="font-medium">{progressPercent}%</span>
+                  <span className="text-muted-foreground">
+                    {isInstallment ? "Parcelas pagas" : "Progresso"}
+                  </span>
+                  <span className="font-medium">
+                    {isInstallment ? `${paidCount}/${totalCount}` : `${progressPercent}%`}
+                  </span>
                 </div>
                 <div className="h-2.5 rounded-full bg-muted overflow-hidden">
                   <div
@@ -147,57 +247,64 @@ export default function ReceivableDetailsPage({
                   />
                 </div>
               </div>
+
+              {!isInstallment && receivable.status !== "PAID" && receivable.status !== "CANCELLED" && (
+                <Button
+                  className="w-full"
+                  onClick={handleMarkAsPaid}
+                  disabled={markingPaid}
+                >
+                  <CheckCircle2 className="size-4" />
+                  {markingPaid ? "Salvando..." : "Marcar como Pago"}
+                </Button>
+              )}
+
+              {receivable.status !== "CANCELLED" && receivable.status !== "PAID" && (
+                <ConfirmDialog
+                  trigger={
+                    <Button
+                      variant="destructive"
+                      className="w-full"
+                      disabled={cancelling}
+                    >
+                      <XCircle className="size-4" />
+                      {cancelling ? "Cancelando..." : "Cancelar Conta"}
+                    </Button>
+                  }
+                  title="Cancelar conta a receber"
+                  description="Tem certeza que deseja cancelar esta conta? Esta ação não pode ser desfeita."
+                  confirmLabel="Sim, cancelar"
+                  variant="destructive"
+                  onConfirm={handleCancel}
+                />
+              )}
             </CardContent>
           </Card>
         </div>
       </div>
 
+      {isInstallment && (
+        <InstallmentsCard
+          installments={installments}
+          accountReceivableId={receivable.id}
+          isCancelled={receivable.status === "CANCELLED"}
+          onUpdate={fetchReceivable}
+        />
+      )}
+
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-bold">PIX Vinculados</CardTitle>
+          <CardTitle className="text-lg font-bold">PIX Vinculado</CardTitle>
         </CardHeader>
         <CardContent>
-          {linkedReceipts.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead className="hidden sm:table-cell">Status</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {linkedReceipts.map((receipt) => {
-                  const rStatus = receiptStatusConfig[receipt.status];
-                  const { date, time } = formatDateTime(receipt.depositDateTime);
-                  return (
-                    <TableRow key={receipt.id}>
-                      <TableCell className="text-sm">
-                        {date}, {time}
-                      </TableCell>
-                      <TableCell className="text-sm font-semibold text-primary">
-                        {formatCurrency(receipt.depositAmount)}
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        <Badge variant={rStatus.variant} className="gap-1">
-                          {rStatus.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Link
-                          href={`/receipts/${receipt.id}`}
-                          className="inline-flex items-center gap-1 text-sm font-medium text-primary"
-                        >
-                          Ver comprovante
-                          <ArrowRight className="size-3.5" />
-                        </Link>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+          {receivable.pixReceiptId ? (
+            <Link
+              href={`/receipts/${receivable.pixReceiptId}`}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary"
+            >
+              Ver comprovante PIX
+              <ArrowRight className="size-3.5" />
+            </Link>
           ) : (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <FileText className="size-10 text-muted-foreground mb-3" />
