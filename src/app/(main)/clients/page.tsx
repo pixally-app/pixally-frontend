@@ -135,7 +135,12 @@ export default function ClientsPage() {
       toast.success("Cliente excluído com sucesso!");
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.message || "Erro ao excluir cliente.");
+        const msg = error.response?.data?.message ?? "";
+        if (msg.toLowerCase().includes("open accounts receivable")) {
+          toast.error("Não é possível excluir um cliente com contas a receber em aberto. Cancele ou resolva-as primeiro.");
+        } else {
+          toast.error(msg || "Erro ao excluir cliente.");
+        }
       } else {
         toast.error("Erro ao excluir cliente.");
       }
