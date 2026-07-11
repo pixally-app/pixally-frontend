@@ -20,6 +20,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useUser } from "@/contexts/user-context";
 
 interface NavItem {
   label: string;
@@ -107,6 +108,8 @@ function getPageTitle(pathname: string): string {
   return "Pixally";
 }
 function SidebarHeader() {
+  const { user } = useUser();
+
   return (
     <div className="flex items-center gap-2.5 px-6 py-5">
       <svg
@@ -125,7 +128,9 @@ function SidebarHeader() {
           strokeLinejoin="round"
         />
       </svg>
-      <span className="text-xl font-bold text-sidebar-foreground">Pixally</span>
+      <span className="text-xl font-bold text-sidebar-foreground">
+        {user?.companyName ?? "Pixally"}
+      </span>
     </div>
   );
 }
