@@ -1,38 +1,62 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { changePasswordSchema, type ChangePasswordFormValues } from "@/schemas/change-password";
+import axios from "axios";
+import { toast } from "sonner";
+import { settingsAccountSchema, type SettingsAccountFormValues } from "@/schemas/settings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { FormErrorMessage } from "@/components/ui/form-error-message";
-import { Upload } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { updateMe } from "@/services/users";
+import { useUser } from "@/contexts/user-context";
 
 export default function SettingsPage() {
-  const [businessName, setBusinessName] = useState("");
-  const [accountName, setAccountName] = useState("");
-  const accountEmail = "usuario@email.com";
+  const { user, setUser } = useUser();
+  const [isSaving, setIsSaving] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<ChangePasswordFormValues>({
-    resolver: zodResolver(changePasswordSchema),
+  const form = useForm<SettingsAccountFormValues>({
+    resolver: zodResolver(settingsAccountSchema),
     defaultValues: {
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
+      username: "",
+      email: "",
+      companyName: "",
     },
   });
 
-  function onChangePassword(_data: ChangePasswordFormValues) {
-    // TODO: integrar com API
-    reset();
+  useEffect(() => {
+    if (!user) return;
+    form.reset({
+      username: user.username ?? "",
+      email: user.email,
+      companyName: user.companyName ?? "",
+    });
+  }, [user, form]);
+
+  async function onSave(data: SettingsAccountFormValues) {
+    setIsSaving(true);
+    try {
+      const updated = await updateMe({
+        username: data.username,
+        email: data.email,
+        companyName: data.companyName || undefined,
+      });
+      setUser(updated);
+      toast.success("Dados atualizados com sucesso");
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const message = error.response?.data?.message;
+        toast.error(message ?? "Erro ao salvar dados");
+      } else {
+        toast.error("Erro ao salvar dados");
+      }
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -46,128 +70,53 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-bold">Meu Negócio</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              // TODO: integrar com API
-            }}
-            className="space-y-4"
-          >
-            <div className="space-y-2">
-              <Label htmlFor="business-name">Nome do Negócio</Label>
-              <Input
-                id="business-name"
-                placeholder="Nome do seu negócio"
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="business-logo">Logo</Label>
-              <label
-                htmlFor="business-logo"
-                className="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-border p-8 transition-colors hover:border-primary/50"
-              >
-                <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                  <Upload className="size-8" />
-                  <p className="text-sm">Clique ou arraste para enviar a logo</p>
-                </div>
-                <input
-                  id="business-logo"
-                  type="file"
-                  accept="image/*"
-                  className="sr-only"
-                />
-              </label>
-            </div>
-
-            <Button type="submit">Salvar Alterações</Button>
-          </form>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
           <CardTitle className="text-lg font-bold">Minha Conta</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="account-name">Nome</Label>
-            <Input
-              id="account-name"
-              placeholder="Seu nome"
-              value={accountName}
-              onChange={(e) => setAccountName(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="account-email">Email</Label>
-            <Input
-              id="account-email"
-              value={accountEmail}
-              disabled
-            />
-            <p className="text-sm text-muted-foreground">
-              O email não pode ser alterado
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg font-bold">Alterar Senha</CardTitle>
-        </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onChangePassword)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="current-password">Senha Atual</Label>
-              <Input
-                id="current-password"
-                type="password"
-                placeholder="Digite sua senha atual"
-                autoComplete="current-password"
-                aria-invalid={!!errors.currentPassword}
-                aria-describedby={errors.currentPassword ? "current-password-error" : undefined}
-                {...register("currentPassword")}
-              />
-              <FormErrorMessage id="current-password-error" message={errors.currentPassword?.message} />
+          {!user ? (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Carregando...</span>
             </div>
+          ) : (
+            <form onSubmit={form.handleSubmit(onSave)} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="company-name">Nome do Negócio</Label>
+                <Input
+                  id="company-name"
+                  placeholder="Nome do seu negócio"
+                  {...form.register("companyName")}
+                />
+                <FormErrorMessage message={form.formState.errors.companyName?.message} />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="new-password">Nova Senha</Label>
-              <Input
-                id="new-password"
-                type="password"
-                placeholder="Digite a nova senha"
-                autoComplete="new-password"
-                aria-invalid={!!errors.newPassword}
-                aria-describedby={errors.newPassword ? "new-password-error" : undefined}
-                {...register("newPassword")}
-              />
-              <FormErrorMessage id="new-password-error" message={errors.newPassword?.message} />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="username">Nome</Label>
+                <Input
+                  id="username"
+                  placeholder="Seu nome"
+                  {...form.register("username")}
+                />
+                <FormErrorMessage message={form.formState.errors.username?.message} />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
-              <Input
-                id="confirm-password"
-                type="password"
-                placeholder="Confirme a nova senha"
-                autoComplete="new-password"
-                aria-invalid={!!errors.confirmPassword}
-                aria-describedby={errors.confirmPassword ? "confirm-password-error" : undefined}
-                {...register("confirmPassword")}
-              />
-              <FormErrorMessage id="confirm-password-error" message={errors.confirmPassword?.message} />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="seu@email.com"
+                  {...form.register("email")}
+                />
+                <FormErrorMessage message={form.formState.errors.email?.message} />
+              </div>
 
-            <Button type="submit">Alterar Senha</Button>
-          </form>
+              <Button type="submit" disabled={isSaving}>
+                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Salvar Alterações
+              </Button>
+            </form>
+          )}
         </CardContent>
       </Card>
     </div>
