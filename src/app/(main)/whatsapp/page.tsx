@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, Loader2, CheckCircle2 } from "lucide-react";
+import { MessageCircle, Loader2, CheckCircle2, Info } from "lucide-react";
 
 const steps = [
   "Abra o WhatsApp no seu celular",
@@ -22,6 +22,16 @@ export default function WhatsAppPage() {
         <h1 className="text-2xl font-bold">WhatsApp</h1>
         <p className="text-muted-foreground">
           Conecte seu WhatsApp para receber comprovantes automaticamente
+        </p>
+      </div>
+
+      <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
+        <Info className="mt-0.5 size-4 shrink-0" />
+        <p>
+          Recomendamos conectar um número dedicado ao negócio, de preferência
+          usando o <span className="font-semibold">WhatsApp Business</span>.
+          Isso evita conflitos com o uso pessoal e garante melhor estabilidade
+          da conexão.
         </p>
       </div>
 
