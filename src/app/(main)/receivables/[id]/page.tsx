@@ -13,7 +13,7 @@ import { DueDateField } from "@/components/receivables/due-date-field";
 import { InstallmentsCard } from "@/components/receivables/installments-card";
 import { statusConfig } from "@/components/receivables/status-config";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { isAxiosError } from "axios";
+import { ApiError } from "@/lib/api-error";
 import { toast } from "sonner";
 
 export default function ReceivableDetailsPage({
@@ -37,10 +37,10 @@ export default function ReceivableDetailsPage({
     getReceivable(id)
       .then((r) => setReceivable(r))
       .catch((err) => {
-        if (isAxiosError(err) && err.response?.status === 404) {
+        if (err instanceof ApiError && err.status === 404) {
           setNotFound(true);
         } else {
-          toast.error("Erro ao carregar conta a receber");
+          toast.error(err instanceof Error ? err.message : "Erro ao carregar conta a receber.");
         }
       })
       .finally(() => setLoading(false));
@@ -87,10 +87,7 @@ export default function ReceivableDetailsPage({
       await fetchReceivable();
       toast.success("Conta atualizada com sucesso!");
     } catch (err) {
-      const message = isAxiosError(err)
-        ? err.response?.data?.message ?? "Erro ao atualizar conta"
-        : "Erro ao atualizar conta";
-      toast.error(message);
+      toast.error(err instanceof Error ? err.message : "Erro ao atualizar conta.");
       throw err;
     }
   }
@@ -102,10 +99,7 @@ export default function ReceivableDetailsPage({
       await fetchReceivable();
       toast.success("Conta cancelada com sucesso!");
     } catch (err) {
-      const message = isAxiosError(err)
-        ? err.response?.data?.message ?? "Erro ao cancelar conta"
-        : "Erro ao cancelar conta";
-      toast.error(message);
+      toast.error(err instanceof Error ? err.message : "Erro ao cancelar conta.");
     } finally {
       setCancelling(false);
     }
@@ -118,10 +112,7 @@ export default function ReceivableDetailsPage({
       await fetchReceivable();
       toast.success("Conta marcada como paga!");
     } catch (err) {
-      const message = isAxiosError(err)
-        ? err.response?.data?.message ?? "Erro ao atualizar conta"
-        : "Erro ao atualizar conta";
-      toast.error(message);
+      toast.error(err instanceof Error ? err.message : "Erro ao atualizar conta.");
     } finally {
       setMarkingPaid(false);
     }

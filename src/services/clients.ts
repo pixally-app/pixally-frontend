@@ -1,4 +1,5 @@
 import { api } from "./api";
+import { resolveApiError } from "@/lib/api-error";
 
 export interface PhoneResponse {
   id: string;
@@ -63,25 +64,55 @@ export interface UpdateClientData {
 }
 
 export async function listClients(params?: ListClientsParams): Promise<PaginatedClients> {
-  const response = await api.get<PaginatedClients>("/clients", { params });
-  return response.data;
+  try {
+    const response = await api.get<PaginatedClients>("/clients", { params });
+    return response.data;
+  } catch (err) {
+    throw resolveApiError(err, {}, "Erro ao carregar clientes.");
+  }
 }
 
 export async function getClient(id: string): Promise<Client> {
-  const response = await api.get<Client>(`/clients/${id}`);
-  return response.data;
+  try {
+    const response = await api.get<Client>(`/clients/${id}`);
+    return response.data;
+  } catch (err) {
+    throw resolveApiError(err, {
+      404: "Cliente não encontrado.",
+    }, "Erro ao carregar cliente.");
+  }
 }
 
 export async function createClient(data: CreateClientData): Promise<Client> {
-  const response = await api.post<Client>("/clients", data);
-  return response.data;
+  try {
+    const response = await api.post<Client>("/clients", data);
+    return response.data;
+  } catch (err) {
+    throw resolveApiError(err, {
+      409: "Cliente já cadastrado com este documento.",
+      422: "Dados inválidos.",
+    }, "Erro ao criar cliente.");
+  }
 }
 
 export async function updateClient(id: string, data: UpdateClientData): Promise<Client> {
-  const response = await api.patch<Client>(`/clients/${id}`, data);
-  return response.data;
+  try {
+    const response = await api.patch<Client>(`/clients/${id}`, data);
+    return response.data;
+  } catch (err) {
+    throw resolveApiError(err, {
+      409: "Documento já em uso por outro cliente.",
+      422: "Dados inválidos.",
+    }, "Erro ao atualizar cliente.");
+  }
 }
 
 export async function deleteClient(id: string): Promise<void> {
-  await api.delete(`/clients/${id}`);
+  try {
+    await api.delete(`/clients/${id}`);
+  } catch (err) {
+    throw resolveApiError(err, {
+      409: "Não é possível excluir um cliente com contas a receber em aberto. Cancele ou resolva-as primeiro.",
+    }, "Erro ao excluir cliente.");
+  }
 }

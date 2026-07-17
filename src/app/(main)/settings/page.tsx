@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 import { toast } from "sonner";
 import { settingsAccountSchema, type SettingsAccountFormValues } from "@/schemas/settings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,13 +46,8 @@ export default function SettingsPage() {
       });
       setUser(updated);
       toast.success("Dados atualizados com sucesso");
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const message = error.response?.data?.message;
-        toast.error(message ?? "Erro ao salvar dados");
-      } else {
-        toast.error("Erro ao salvar dados");
-      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao salvar dados.");
     } finally {
       setIsSaving(false);
     }
