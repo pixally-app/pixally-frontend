@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle2, Info, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -16,7 +16,7 @@ const steps = [
 ];
 
 export default function WhatsAppPage() {
-  const { isConnected, connectedAt, loading, refreshStatus } = useWhatsApp();
+  const { isConnected, connectedAt, loading, statusError, refreshStatus } = useWhatsApp();
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [qrLoading, setQrLoading] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
@@ -29,7 +29,7 @@ export default function WhatsAppPage() {
     }
   }
 
-  function fetchQrCode() {
+  const fetchQrCode = useCallback(() => {
     setQrLoading(true);
     getZapfyQrCode()
       .then(({ qrCode, state }) => {
@@ -44,6 +44,18 @@ export default function WhatsAppPage() {
         toast.error(err instanceof Error ? err.message : "Erro ao carregar o QR Code. Tente novamente.");
       })
       .finally(() => setQrLoading(false));
+  }, [refreshStatus]);
+
+  async function handleDisconnect() {
+    setDisconnecting(true);
+    try {
+      await disconnectZapfy();
+      await refreshStatus();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao desconectar WhatsApp.");
+    } finally {
+      setDisconnecting(false);
+    }
   }
 
   useEffect(() => {
@@ -55,11 +67,21 @@ export default function WhatsAppPage() {
       return;
     }
 
+    if (statusError) return;
+
     fetchQrCode();
-    pollingRef.current = setInterval(refreshStatus, 5000);
+
+    pollingRef.current = setInterval(async () => {
+      try {
+        await refreshStatus();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Erro ao verificar status.");
+        stopPolling();
+      }
+    }, 5000);
 
     return () => stopPolling();
-  }, [loading, isConnected, refreshStatus]);
+  }, [loading, isConnected, statusError, refreshStatus, fetchQrCode]);
 
   return (
     <div className="space-y-6">
@@ -122,21 +144,15 @@ export default function WhatsAppPage() {
               <Button
                 variant="outline"
                 disabled={disconnecting}
-                onClick={async () => {
-                  setDisconnecting(true);
-                  try {
-                    await disconnectZapfy();
-                    await refreshStatus();
-                  } catch (err) {
-                    toast.error(err instanceof Error ? err.message : "Erro ao desconectar WhatsApp.");
-                  } finally {
-                    setDisconnecting(false);
-                  }
-                }}
+                onClick={handleDisconnect}
               >
                 {disconnecting && <Loader2 className="size-4 animate-spin" />}
                 {disconnecting ? "Desconectando..." : "Desconectar"}
               </Button>
+            </div>
+          ) : statusError ? (
+            <div className="flex flex-col items-center gap-3 py-8 text-center">
+              <p className="text-sm text-destructive">{statusError}</p>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-6">
