@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { CheckCircle2, Info, Loader2, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
+import { getZapfyQrCode, disconnectZapfy } from "@/services/zapfy";
+import { useWhatsApp } from "@/contexts/whatsapp-context";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, Loader2, CheckCircle2, Info } from "lucide-react";
 
 const steps = [
   "Abra o WhatsApp no seu celular",
@@ -13,16 +16,77 @@ const steps = [
 ];
 
 export default function WhatsAppPage() {
-  const [status, setStatus] = useState<"disconnected" | "connecting" | "connected">("disconnected");
-  const connectedPhone = "(11) 99999-9999";
+  const { isConnected, connectedAt, loading, refreshStatus } = useWhatsApp();
+  const [qrCode, setQrCode] = useState<string | null>(null);
+  const [qrLoading, setQrLoading] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  function stopPolling() {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+  }
+
+  function fetchQrCode() {
+    setQrLoading(true);
+    getZapfyQrCode()
+      .then(({ qrCode, state }) => {
+        if (state === "connected") {
+          refreshStatus();
+        } else {
+          setQrCode(qrCode);
+        }
+      })
+      .catch((err) => {
+        setQrCode(null);
+        toast.error(err instanceof Error ? err.message : "Erro ao carregar o QR Code. Tente novamente.");
+      })
+      .finally(() => setQrLoading(false));
+  }
+
+  useEffect(() => {
+    if (loading) return;
+
+    if (isConnected) {
+      stopPolling();
+      setQrCode(null);
+      return;
+    }
+
+    fetchQrCode();
+    pollingRef.current = setInterval(refreshStatus, 5000);
+
+    return () => stopPolling();
+  }, [loading, isConnected, refreshStatus]);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">WhatsApp</h1>
-        <p className="text-muted-foreground">
-          Conecte seu WhatsApp para receber comprovantes automaticamente
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">WhatsApp</h1>
+          <p className="text-muted-foreground">
+            Conecte seu WhatsApp para receber comprovantes automaticamente
+          </p>
+        </div>
+
+        {!loading && (
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
+              isConnected
+                ? "bg-success/10 text-success"
+                : "bg-muted text-muted-foreground"
+            }`}
+          >
+            <span
+              className={`size-1.5 rounded-full ${
+                isConnected ? "bg-success" : "bg-muted-foreground"
+              }`}
+            />
+            {isConnected ? "Conectado" : "Desconectado"}
+          </span>
+        )}
       </div>
 
       <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
@@ -37,10 +101,66 @@ export default function WhatsAppPage() {
 
       <Card>
         <CardContent className="p-8">
-          {status === "disconnected" ? (
+          {loading ? (
+            <div className="flex flex-col items-center gap-4 py-8">
+              <Loader2 className="size-8 animate-spin text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Carregando...</p>
+            </div>
+          ) : isConnected ? (
+            <div className="flex flex-col items-center gap-4 py-8 text-center">
+              <CheckCircle2 className="size-12 text-success" />
+              <p className="text-lg font-semibold">WhatsApp conectado</p>
+              {connectedAt && (
+                <p className="text-sm text-muted-foreground">
+                  Conectado em{" "}
+                  {new Date(connectedAt).toLocaleString("pt-BR", {
+                    dateStyle: "short",
+                    timeStyle: "short",
+                  })}
+                </p>
+              )}
+              <Button
+                variant="outline"
+                disabled={disconnecting}
+                onClick={async () => {
+                  setDisconnecting(true);
+                  try {
+                    await disconnectZapfy();
+                    await refreshStatus();
+                  } catch (err) {
+                    toast.error(err instanceof Error ? err.message : "Erro ao desconectar WhatsApp.");
+                  } finally {
+                    setDisconnecting(false);
+                  }
+                }}
+              >
+                {disconnecting && <Loader2 className="size-4 animate-spin" />}
+                {disconnecting ? "Desconectando..." : "Desconectar"}
+              </Button>
+            </div>
+          ) : (
             <div className="flex flex-col items-center gap-6">
-              <div className="flex items-center justify-center rounded-lg bg-muted size-64 text-muted-foreground">
-                <MessageCircle className="size-16" />
+              <div className="flex flex-col items-center gap-2">
+                <div className="flex items-center justify-center rounded-lg bg-muted size-64">
+                  {qrLoading || !qrCode ? (
+                    <Loader2 className="size-8 animate-spin text-muted-foreground" />
+                  ) : (
+                    <img
+                      src={qrCode}
+                      alt="QR Code WhatsApp"
+                      className="size-64 rounded-lg"
+                    />
+                  )}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={qrLoading}
+                  onClick={fetchQrCode}
+                >
+                  <RefreshCw className="size-3.5" />
+                  Recarregar QR Code
+                </Button>
               </div>
 
               <div className="w-full space-y-3">
@@ -56,45 +176,6 @@ export default function WhatsAppPage() {
                   ))}
                 </ol>
               </div>
-
-              <Button
-                className="w-full"
-                onClick={() => setStatus("connecting")}
-              >
-                <MessageCircle className="size-4" />
-                Conectar
-              </Button>
-            </div>
-          ) : status === "connecting" ? (
-            <div className="flex flex-col items-center gap-4 py-8">
-              <MessageCircle className="size-12 text-muted-foreground" />
-              <div className="flex items-center gap-2">
-                <Loader2 className="size-4 animate-spin" />
-                <span className="text-lg font-semibold">Conectando...</span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Aguardando conexão...
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => setStatus("disconnected")}
-              >
-                Cancelar
-              </Button>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-4 py-8">
-              <CheckCircle2 className="size-12 text-success" />
-              <span className="text-lg font-semibold">Conectado com sucesso</span>
-              <p className="text-sm text-muted-foreground">
-                {connectedPhone}
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => setStatus("disconnected")}
-              >
-                Desconectar
-              </Button>
             </div>
           )}
         </CardContent>
