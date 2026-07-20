@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import axios from "axios";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -52,12 +51,8 @@ export default function ClientsPage() {
     try {
       const response = await listClients({ limit: 100 });
       setClients(response.data);
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.message || "Erro ao carregar clientes.");
-      } else {
-        toast.error("Erro ao carregar clientes.");
-      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao carregar clientes.");
     } finally {
       setLoading(false);
     }
@@ -92,13 +87,9 @@ export default function ClientsPage() {
       });
       setClients((prev) => [response, ...prev]);
       toast.success("Cliente criado com sucesso!");
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.message || "Erro ao criar cliente.");
-      } else {
-        toast.error("Erro ao criar cliente.");
-      }
-      throw error;
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao criar cliente.");
+      throw err;
     }
   }
 
@@ -118,13 +109,9 @@ export default function ClientsPage() {
       });
       setClients((prev) => prev.map((c) => (c.id === clientId ? response : c)));
       toast.success("Cliente atualizado com sucesso!");
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.message || "Erro ao atualizar cliente.");
-      } else {
-        toast.error("Erro ao atualizar cliente.");
-      }
-      throw error;
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao atualizar cliente.");
+      throw err;
     }
   }
 
@@ -133,17 +120,8 @@ export default function ClientsPage() {
       await deleteClient(clientId);
       setClients((prev) => prev.filter((c) => c.id !== clientId));
       toast.success("Cliente excluído com sucesso!");
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const msg = error.response?.data?.message ?? "";
-        if (msg.toLowerCase().includes("open accounts receivable")) {
-          toast.error("Não é possível excluir um cliente com contas a receber em aberto. Cancele ou resolva-as primeiro.");
-        } else {
-          toast.error(msg || "Erro ao excluir cliente.");
-        }
-      } else {
-        toast.error("Erro ao excluir cliente.");
-      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao excluir cliente.");
     }
   }
 

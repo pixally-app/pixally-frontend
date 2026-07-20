@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import axios from "axios";
 import { Eye, EyeOff } from "lucide-react";
 import {
   resetPasswordSchema,
@@ -64,12 +63,8 @@ function ResetPasswordForm() {
       await resetPassword(token!, data.password);
       toast.success("Senha redefinida com sucesso!");
       router.push("/login");
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 400) {
-        toast.error("Link inválido ou expirado. Solicite um novo link.");
-      } else {
-        toast.error("Erro ao redefinir senha. Tente novamente.");
-      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao redefinir senha. Tente novamente.");
     }
   }
 

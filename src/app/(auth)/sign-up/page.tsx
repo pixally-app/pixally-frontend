@@ -20,7 +20,6 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { setCookie } from "cookies-next";
-import axios from "axios";
 import { Eye, EyeOff } from "lucide-react";
 import { register as registerUser } from "@/services/auth";
 
@@ -54,14 +53,8 @@ export default function SignUpPage() {
       });
       toast.success("Conta criada com sucesso!");
       router.push("/dashboard");
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 409) {
-        toast.error(error.response.data.message === "Email already registered"
-          ? "Este email já está cadastrado."
-          : "Este documento já está cadastrado.");
-      } else {
-        toast.error("Erro ao criar conta. Tente novamente.");
-      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao criar conta. Tente novamente.");
     }
   }
 

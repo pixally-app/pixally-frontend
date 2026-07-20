@@ -23,7 +23,6 @@ import {
   type AccountReceivable,
   type AccountReceivableStatus,
 } from "@/services/receivables";
-import { isAxiosError } from "axios";
 import { toast } from "sonner";
 
 const filters = [
@@ -49,10 +48,7 @@ export default function ReceivablesPage() {
       const response = await listReceivables(params);
       setReceivables(response.data);
     } catch (err) {
-      const message = isAxiosError(err)
-        ? err.response?.data?.message ?? "Erro ao carregar contas a receber"
-        : "Erro ao carregar contas a receber";
-      toast.error(message);
+      toast.error(err instanceof Error ? err.message : "Erro ao carregar contas a receber.");
     } finally {
       setLoading(false);
     }
@@ -104,10 +100,7 @@ export default function ReceivablesPage() {
       toast.success("Conta a receber criada com sucesso!");
       fetchReceivables();
     } catch (err) {
-      const message = isAxiosError(err)
-        ? err.response?.data?.message ?? "Erro ao criar conta a receber"
-        : "Erro ao criar conta a receber";
-      toast.error(message);
+      toast.error(err instanceof Error ? err.message : "Erro ao criar conta a receber.");
       throw err;
     }
   }
