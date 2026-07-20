@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useUser } from "@/contexts/user-context";
+import { useWhatsApp } from "@/contexts/whatsapp-context";
 
 interface NavItem {
   label: string;
@@ -74,18 +75,13 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-const mainNavItems: NavItem[] = [
+const baseNavItems: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Comprovantes", href: "/receipts", icon: Receipt },
   { label: "Clientes", href: "/clients", icon: Users },
   { label: "Contas a Receber", href: "/receivables", icon: Wallet },
   { label: "Alertas", href: "/alerts", icon: Bell, badge: warnings.filter((w) => !w.resolved).length },
-  {
-    label: "WhatsApp",
-    href: "/whatsapp",
-    icon: MessageCircle,
-    indicator: "success",
-  },
+  { label: "WhatsApp", href: "/whatsapp", icon: MessageCircle },
   { label: "Configurações", href: "/settings", icon: Settings },
 ];
 
@@ -190,6 +186,13 @@ function SidebarFooter() {
 function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { isConnected } = useWhatsApp();
+
+  const navItems = baseNavItems.map((item) =>
+    item.href === "/whatsapp" && isConnected
+      ? { ...item, indicator: "success" as const }
+      : item
+  );
 
   function isActive(href: string) {
     if (href === "/dashboard") {
@@ -208,7 +211,7 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
       <SidebarHeader />
 
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-2">
-        {mainNavItems.map((item) => (
+        {navItems.map((item) => (
           <SidebarNavItem
             key={item.href}
             item={item}

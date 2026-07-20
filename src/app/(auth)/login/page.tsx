@@ -7,7 +7,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { setCookie } from "cookies-next";
 import { toast } from "sonner";
-import axios from "axios";
 import { Eye, EyeOff } from "lucide-react";
 import { loginSchema, type LoginFormData } from "@/schemas/login";
 import { login } from "@/services/auth";
@@ -43,12 +42,8 @@ export default function LoginPage() {
         path: "/",
       });
       router.push("/dashboard");
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
-        toast.error("Email ou senha inválidos");
-      } else {
-        toast.error("Erro ao fazer login. Tente novamente.");
-      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao fazer login. Tente novamente.");
     }
   }
 

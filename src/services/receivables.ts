@@ -1,4 +1,5 @@
 import { api } from "./api";
+import { resolveApiError } from "@/lib/api-error";
 
 export type AccountReceivableStatus = "PENDING" | "PAID" | "OVERDUE" | "CANCELLED";
 
@@ -70,23 +71,46 @@ export interface UpdateReceivableData {
 }
 
 export async function listReceivables(params?: ListReceivablesParams): Promise<PaginatedReceivables> {
-  const response = await api.get<PaginatedReceivables>("/accounts-receivable", { params });
-  return response.data;
+  try {
+    const response = await api.get<PaginatedReceivables>("/accounts-receivable", { params });
+    return response.data;
+  } catch (err) {
+    throw resolveApiError(err, {}, "Erro ao carregar contas a receber.");
+  }
 }
 
 export async function getReceivable(id: string): Promise<AccountReceivable> {
-  const response = await api.get<AccountReceivable>(`/accounts-receivable/${id}`);
-  return response.data;
+  try {
+    const response = await api.get<AccountReceivable>(`/accounts-receivable/${id}`);
+    return response.data;
+  } catch (err) {
+    throw resolveApiError(err, {
+      404: "Conta a receber não encontrada.",
+    }, "Erro ao carregar conta a receber.");
+  }
 }
 
 export async function createReceivable(data: CreateReceivableData): Promise<AccountReceivable> {
-  const response = await api.post<AccountReceivable>("/accounts-receivable", data);
-  return response.data;
+  try {
+    const response = await api.post<AccountReceivable>("/accounts-receivable", data);
+    return response.data;
+  } catch (err) {
+    throw resolveApiError(err, {
+      404: "Cliente não encontrado.",
+      422: "Dados inválidos.",
+    }, "Erro ao criar conta a receber.");
+  }
 }
 
 export async function updateReceivable(id: string, data: UpdateReceivableData): Promise<AccountReceivable> {
-  const response = await api.patch<AccountReceivable>(`/accounts-receivable/${id}`, data);
-  return response.data;
+  try {
+    const response = await api.patch<AccountReceivable>(`/accounts-receivable/${id}`, data);
+    return response.data;
+  } catch (err) {
+    throw resolveApiError(err, {
+      422: "Dados inválidos.",
+    }, "Erro ao atualizar conta.");
+  }
 }
 
 export interface UpdateInstallmentData {
@@ -95,25 +119,49 @@ export interface UpdateInstallmentData {
 }
 
 export async function updateInstallment(accountReceivableId: string, installmentId: string, data: UpdateInstallmentData): Promise<AccountReceivable> {
-  const response = await api.patch<AccountReceivable>(`/accounts-receivable/${accountReceivableId}/installments/${installmentId}`, data);
-  return response.data;
+  try {
+    const response = await api.patch<AccountReceivable>(`/accounts-receivable/${accountReceivableId}/installments/${installmentId}`, data);
+    return response.data;
+  } catch (err) {
+    throw resolveApiError(err, {
+      422: "Dados inválidos.",
+    }, "Erro ao atualizar parcela.");
+  }
 }
 
 export async function markAllInstallmentsAsPaid(accountReceivableId: string): Promise<AccountReceivable> {
-  const response = await api.patch<AccountReceivable>(`/accounts-receivable/${accountReceivableId}/installments/mark-all-paid`);
-  return response.data;
+  try {
+    const response = await api.patch<AccountReceivable>(`/accounts-receivable/${accountReceivableId}/installments/mark-all-paid`);
+    return response.data;
+  } catch (err) {
+    throw resolveApiError(err, {}, "Erro ao marcar parcelas como pagas.");
+  }
 }
 
 export async function markInstallmentAsPaid(accountReceivableId: string, installmentId: string): Promise<AccountReceivable> {
-  const response = await api.patch<AccountReceivable>(`/accounts-receivable/${accountReceivableId}/installments/${installmentId}/mark-paid`);
-  return response.data;
+  try {
+    const response = await api.patch<AccountReceivable>(`/accounts-receivable/${accountReceivableId}/installments/${installmentId}/mark-paid`);
+    return response.data;
+  } catch (err) {
+    throw resolveApiError(err, {}, "Erro ao marcar parcela como paga.");
+  }
 }
 
 export async function cancelReceivable(id: string): Promise<AccountReceivable> {
-  const response = await api.patch<AccountReceivable>(`/accounts-receivable/${id}/cancel`);
-  return response.data;
+  try {
+    const response = await api.patch<AccountReceivable>(`/accounts-receivable/${id}/cancel`);
+    return response.data;
+  } catch (err) {
+    throw resolveApiError(err, {
+      422: "Conta não pode ser cancelada neste status.",
+    }, "Erro ao cancelar conta.");
+  }
 }
 
 export async function deleteReceivable(id: string): Promise<void> {
-  await api.delete(`/accounts-receivable/${id}`);
+  try {
+    await api.delete(`/accounts-receivable/${id}`);
+  } catch (err) {
+    throw resolveApiError(err, {}, "Erro ao excluir conta a receber.");
+  }
 }
