@@ -2,8 +2,9 @@
 
 import { useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
-import { ArrowUpFromLine, CircleCheckBig } from "lucide-react";
+import { ArrowUpFromLine, CircleCheckBig, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { uploadReceipt } from "@/services/receipts";
 
 const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/jpg", "application/pdf"];
 const MAX_SIZE_MB = 10;
@@ -16,9 +17,10 @@ const steps = [
 
 export function UploadReceipt() {
   const [isDragging, setIsDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = useCallback((file: File) => {
+  const handleFile = useCallback(async (file: File) => {
     if (!ACCEPTED_TYPES.includes(file.type)) {
       toast.error("Tipo de arquivo não suportado. Envie PNG, JPG ou PDF.");
       return;
@@ -27,18 +29,26 @@ export function UploadReceipt() {
       toast.error(`Arquivo muito grande. O tamanho máximo é ${MAX_SIZE_MB}MB.`);
       return;
     }
-    // TODO: processar arquivo
-    toast.success(`Arquivo "${file.name}" recebido com sucesso.`);
+    setUploading(true);
+    try {
+      await uploadReceipt(file);
+      toast.success("Comprovante enviado com sucesso! A análise será concluída em instantes.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao enviar comprovante.");
+    } finally {
+      setUploading(false);
+    }
   }, []);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
       setIsDragging(false);
+      if (uploading) return;
       const file = e.dataTransfer.files[0];
       if (file) handleFile(file);
     },
-    [handleFile]
+    [handleFile, uploading]
   );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -64,29 +74,41 @@ export function UploadReceipt() {
     <div className="flex h-full flex-col gap-5">
       <button
         type="button"
+        disabled={uploading}
         onClick={() => inputRef.current?.click()}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         className={cn(
-          "flex w-full flex-1 flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-12 text-center transition-colors cursor-pointer",
-          isDragging
-            ? "border-primary bg-primary/5"
-            : "border-border hover:border-primary/50"
+          "flex w-full flex-1 flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-12 text-center transition-colors",
+          uploading
+            ? "cursor-not-allowed opacity-60 border-border"
+            : "cursor-pointer border-border hover:border-primary/50",
+          isDragging && !uploading && "border-primary bg-primary/5"
         )}
       >
         <div className="rounded-full bg-muted p-3 text-muted-foreground">
-          <ArrowUpFromLine className="size-6" />
+          {uploading ? (
+            <Loader2 className="size-6 animate-spin" />
+          ) : (
+            <ArrowUpFromLine className="size-6" />
+          )}
         </div>
         <div>
           <p className="text-sm font-medium">
-            Arraste um arquivo
-            <br />
-            ou clique para selecionar
+            {uploading ? "Enviando comprovante..." : (
+              <>
+                Arraste um arquivo
+                <br />
+                ou clique para selecionar
+              </>
+            )}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            PNG, JPG ou PDF até 10MB
-          </p>
+          {!uploading && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              PNG, JPG ou PDF até 10MB
+            </p>
+          )}
         </div>
       </button>
 

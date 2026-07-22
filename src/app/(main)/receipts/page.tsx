@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,46 +20,48 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import {
-  Search,
-  Download,
-  MessageCircle,
-  ArrowUpFromLine,
-  Eye,
-  FileText,
-} from "lucide-react";
+import { Search, Download, Eye, FileText } from "lucide-react";
 import Link from "next/link";
-import { receipts, statusConfig } from "@/data/mock-receipts";
+import { toast } from "sonner";
+import { listReceipts, type Receipt, type ReceiptStatus, type ReceiptOrigin } from "@/services/receipts";
+import { statusConfig, originConfig } from "@/components/receipts/status-config";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDateTime } from "@/lib/formatters";
-
-const originIcon = {
-  whatsapp: <MessageCircle className="size-4" />,
-  manual: <ArrowUpFromLine className="size-4" />,
-};
-
-const originLabel = {
-  whatsapp: "WhatsApp",
-  manual: "Manual",
-};
 
 export default function ReceiptsPage() {
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [originFilter, setOriginFilter] = useState<string>("all");
+  const [receipts, setReceipts] = useState<Receipt[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  const filtered = useMemo(() => {
-    return receipts.filter((r) => {
-      const matchesSearch =
-        !search ||
-        r.clientName.toLowerCase().includes(search.toLowerCase()) ||
-        formatCurrency(r.depositAmount).includes(search);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 500);
+    return () => clearTimeout(timer);
+  }, [search]);
 
-      const matchesStatus = statusFilter === "all" || r.status === statusFilter;
-      const matchesOrigin = originFilter === "all" || r.origin === originFilter;
+  const fetchReceipts = useCallback(async () => {
+    try {
+      setLoading(true);
+      const params: Parameters<typeof listReceipts>[0] = { limit: 100 };
+      if (statusFilter !== "all") params.status = statusFilter as ReceiptStatus;
+      if (originFilter !== "all") params.origin = originFilter as ReceiptOrigin;
+      if (debouncedSearch) params.clientName = debouncedSearch;
+      const response = await listReceipts(params);
+      setReceipts(response.data);
+      setTotal(response.total);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao carregar comprovantes.");
+    } finally {
+      setLoading(false);
+    }
+  }, [debouncedSearch, statusFilter, originFilter]);
 
-      return matchesSearch && matchesStatus && matchesOrigin;
-    });
-  }, [search, statusFilter, originFilter]);
+  useEffect(() => {
+    fetchReceipts();
+  }, [fetchReceipts]);
 
   return (
     <div className="space-y-6">
@@ -76,8 +78,8 @@ export default function ReceiptsPage() {
             <div className="relative w-full sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por cliente ou valor..."
-                aria-label="Buscar por cliente ou valor"
+                placeholder="Buscar por cliente"
+                aria-label="Buscar por cliente"
                 className="pl-9"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -91,11 +93,12 @@ export default function ReceiptsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="conciliado">Conciliado</SelectItem>
-                  <SelectItem value="recebido">Recebido</SelectItem>
-                  <SelectItem value="analisando">Analisando</SelectItem>
-                  <SelectItem value="alerta">Alerta</SelectItem>
-                  <SelectItem value="problema">Problema</SelectItem>
+                  <SelectItem value="RECONCILED">Conciliado</SelectItem>
+                  <SelectItem value="RECEIVED">Recebido</SelectItem>
+                  <SelectItem value="ANALYSING">Analisando</SelectItem>
+                  <SelectItem value="YELLOW_FLAG">Alerta</SelectItem>
+                  <SelectItem value="RED_FLAG">Alerta Vermelho</SelectItem>
+                  <SelectItem value="ERROR">Erro</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -117,9 +120,11 @@ export default function ReceiptsPage() {
             </div>
           </div>
 
-          <p className="text-sm text-muted-foreground mt-4">
-            {filtered.length} comprovante(s) encontrado(s)
-          </p>
+          {!loading && (
+            <p className="text-sm text-muted-foreground mt-4">
+              {total} comprovante(s) encontrado(s)
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -129,16 +134,25 @@ export default function ReceiptsPage() {
             <TableRow>
               <TableHead>Data</TableHead>
               <TableHead>Cliente</TableHead>
+              <TableHead className="hidden sm:table-cell">Remetente</TableHead>
+              <TableHead className="hidden md:table-cell">Banco</TableHead>
+              <TableHead className="hidden md:table-cell">Conta</TableHead>
               <TableHead>Valor</TableHead>
+              <TableHead className="hidden sm:table-cell">Origem</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Origem</TableHead>
-              <TableHead>Ações</TableHead>
+              <TableHead></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.length === 0 ? (
+            {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-32 text-center">
+                <TableCell colSpan={9} className="h-32 text-center text-muted-foreground text-sm">
+                  Carregando...
+                </TableCell>
+              </TableRow>
+            ) : receipts.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={9} className="h-32 text-center">
                   <div className="flex flex-col items-center gap-2 text-muted-foreground">
                     <FileText className="size-8" />
                     <p className="text-sm">Nenhum comprovante encontrado.</p>
@@ -146,34 +160,75 @@ export default function ReceiptsPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((receipt) => {
-                const status = statusConfig[receipt.status];
-                const { date, time } = formatDateTime(receipt.depositDateTime);
+              receipts.map((receipt) => {
+                const status = statusConfig[receipt.status] ?? { label: receipt.status, variant: "secondary" as const };
+                const analysing = receipt.status === "ANALYSING";
+                const datetime = receipt.depositDateTime ? formatDateTime(receipt.depositDateTime) : null;
                 return (
                   <TableRow key={receipt.id}>
                     <TableCell>
-                      <div>
-                        <p className="font-medium">{date}</p>
-                        <p className="text-sm text-muted-foreground">{time}</p>
-                      </div>
+                      {datetime ? (
+                        <div>
+                          <p className="font-medium">{datetime.date}</p>
+                          <p className="text-sm text-muted-foreground">{datetime.time}</p>
+                        </div>
+                      ) : analysing ? (
+                        <div className="space-y-1.5">
+                          <Skeleton className="h-4 w-20" />
+                          <Skeleton className="h-3 w-16" />
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <p className="font-medium">{receipt.clientName}</p>
-                        <p className="text-sm text-muted-foreground">{receipt.depositOriginBank}</p>
-                      </div>
+                      {receipt.client?.name ? (
+                        <span className="font-medium">{receipt.client.name}</span>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      {receipt.depositOriginName ? (
+                        <span className="text-sm">{receipt.depositOriginName}</span>
+                      ) : analysing ? (
+                        <Skeleton className="h-4 w-28" />
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {receipt.depositOriginBank ? (
+                        <span className="text-sm">{receipt.depositOriginBank}</span>
+                      ) : analysing ? (
+                        <Skeleton className="h-4 w-24" />
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {receipt.depositOriginAccount ? (
+                        <span className="text-sm font-mono">{receipt.depositOriginAccount}</span>
+                      ) : analysing ? (
+                        <Skeleton className="h-4 w-24" />
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
                     </TableCell>
                     <TableCell>
-                      <span className="font-semibold text-success">{formatCurrency(receipt.depositAmount)}</span>
+                      {receipt.depositAmount != null ? (
+                        <span className="font-semibold text-success">{formatCurrency(receipt.depositAmount)}</span>
+                      ) : analysing ? (
+                        <Skeleton className="h-4 w-20" />
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      <span className="text-sm text-muted-foreground">{originConfig[receipt.origin].label}</span>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={status.variant}>{status.label}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1.5 text-muted-foreground">
-                        {originIcon[receipt.origin]}
-                        <span className="text-sm">{originLabel[receipt.origin]}</span>
-                      </div>
+                      <Badge className={status.badgeClass}>{status.label}</Badge>
                     </TableCell>
                     <TableCell>
                       <Link
@@ -181,7 +236,6 @@ export default function ReceiptsPage() {
                         className="inline-flex items-center gap-1.5 text-sm font-medium text-primary"
                       >
                         <Eye className="size-4" />
-                        Ver
                       </Link>
                     </TableCell>
                   </TableRow>
