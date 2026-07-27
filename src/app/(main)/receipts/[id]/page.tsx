@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ResolveWarningDialog } from "@/components/receipts/resolve-warning-dialog";
 import { toast } from "sonner";
 import { getReceipt, deleteReceipt, type Receipt, type ReceiptWarning } from "@/services/receipts";
 import { statusConfig } from "@/components/receipts/status-config";
@@ -38,7 +39,7 @@ function Field({label, value, analysing, mono = false }: {
   
 }
 
-function WarningItem({ warning }: { warning: ReceiptWarning }) {
+function WarningItem({ warning, onResolve }: { warning: ReceiptWarning; onResolve?: () => void }) {
   const isRed = warning.type === "red";
   const Icon = isRed ? AlertTriangle : OctagonAlert;
   const colorClass = isRed ? "text-destructive" : "text-warning";
@@ -58,6 +59,11 @@ function WarningItem({ warning }: { warning: ReceiptWarning }) {
           </p>
         )}
       </div>
+      {!warning.resolved && onResolve && (
+        <Button variant="outline" size="sm" className="shrink-0 bg-background" onClick={onResolve}>
+          Resolver
+        </Button>
+      )}
     </div>
   );
 }
@@ -73,6 +79,7 @@ export default function ReceiptDetailsPage({
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [resolvingWarningId, setResolvingWarningId] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [payerData, setPayerData] = useState({
     depositOriginName: "",
@@ -164,6 +171,20 @@ export default function ReceiptDetailsPage({
   function handleSave() {
     toast.info("Edição será habilitada em breve.");
     setIsEditing(false);
+  }
+
+  function handleResolveWarning(reason: string) {
+    if (!resolvingWarningId || !receipt) return;
+    setReceipt({
+      ...receipt,
+      warnings: receipt.warnings.map((w) =>
+        w.id === resolvingWarningId
+          ? { ...w, resolved: true, resolutionReason: reason, resolvedAt: new Date().toISOString() }
+          : w
+      ),
+    });
+    setResolvingWarningId(null);
+    toast.success("Alerta resolvido com sucesso.");
   }
 
   async function handleDelete() {
@@ -269,7 +290,11 @@ export default function ReceiptDetailsPage({
           {hasWarnings && (
             <div className="space-y-3">
               {receipt.warnings.map((warning) => (
-                <WarningItem key={warning.id} warning={warning} />
+                <WarningItem
+                  key={warning.id}
+                  warning={warning}
+                  onResolve={() => setResolvingWarningId(warning.id)}
+                />
               ))}
             </div>
           )}
@@ -398,6 +423,12 @@ export default function ReceiptDetailsPage({
           </Card>
         </div>
       </div>
+
+      <ResolveWarningDialog
+        open={resolvingWarningId !== null}
+        onOpenChange={(open) => { if (!open) setResolvingWarningId(null); }}
+        onConfirm={handleResolveWarning}
+      />
     </div>
   );
 }

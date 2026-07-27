@@ -42,9 +42,9 @@ export default function ReceiptsPage() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  const fetchReceipts = useCallback(async () => {
+  const fetchReceipts = useCallback(async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const params: Parameters<typeof listReceipts>[0] = { limit: 100 };
       if (statusFilter !== "all") params.status = statusFilter as ReceiptStatus;
       if (originFilter !== "all") params.origin = originFilter as ReceiptOrigin;
@@ -53,15 +53,22 @@ export default function ReceiptsPage() {
       setReceipts(response.data);
       setTotal(response.total);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao carregar comprovantes.");
+      if (!silent) toast.error(err instanceof Error ? err.message : "Erro ao carregar comprovantes.");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [debouncedSearch, statusFilter, originFilter]);
 
   useEffect(() => {
     fetchReceipts();
   }, [fetchReceipts]);
+
+  const hasAnalysing = receipts.some((r) => r.status === "ANALYSING");
+
+  useEffect(() => {
+    const interval = setInterval(() => fetchReceipts(true), hasAnalysing ? 3000 : 15000);
+    return () => clearInterval(interval);
+  }, [hasAnalysing, fetchReceipts]);
 
   return (
     <div className="space-y-6">
