@@ -66,7 +66,7 @@ export default function ReceiptsPage() {
   const hasAnalysing = receipts.some((r) => r.status === "ANALYSING");
 
   useEffect(() => {
-    const interval = setInterval(() => fetchReceipts(true), hasAnalysing ? 3000 : 15000);
+    const interval = setInterval(() => fetchReceipts(true), hasAnalysing ? 3000 : 5000);
     return () => clearInterval(interval);
   }, [hasAnalysing, fetchReceipts]);
 
