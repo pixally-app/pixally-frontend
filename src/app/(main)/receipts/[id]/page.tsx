@@ -3,40 +3,84 @@
 import { use, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Pencil, X, Check, Loader2, AlertTriangle, OctagonAlert, ZoomIn, ZoomOut, RotateCcw, Trash2 } from "lucide-react";
+import CurrencyInput from "react-currency-input-field";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input, inputBaseClasses } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ResolveWarningDialog } from "@/components/receipts/resolve-warning-dialog";
+import { FormErrorMessage } from "@/components/ui/form-error-message";
 import { toast } from "sonner";
 import { getReceipt, deleteReceipt, type Receipt, type ReceiptWarning } from "@/services/receipts";
-import { statusConfig } from "@/components/receipts/status-config";
 import { ApiError } from "@/lib/api-error";
 import { formatCurrency, formatDateTime } from "@/lib/formatters";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import { receiptEditSchema, type ReceiptEditValues } from "@/schemas/receipt-edit";
 
-function Field({label, value, analysing, mono = false }: {
+
+const payerFields = [
+  { key: "depositOriginName", label: "Nome" },
+  { key: "depositOriginBank", label: "Banco" },
+  { key: "depositOriginAgency", label: "Agência" },
+  { key: "depositOriginAccount", label: "Conta" },
+  { key: "depositOriginDocument", label: "CPF/CNPJ" },
+] as const;
+
+const receiverFields = [
+  { key: "depositDestinationName", label: "Nome", mono: false },
+  { key: "depositDestinationBank", label: "Banco", mono: false },
+  { key: "depositDestinationDocument", label: "CPF/CNPJ", mono: false },
+  { key: "depositDestinationAccount", label: "Conta/Chave PIX", mono: true },
+] as const;
+
+function toEditValues(receipt: Receipt | null): ReceiptEditValues {
+  return {
+    pixTransactionId: receipt?.pixTransactionId ?? "",
+    depositOriginName: receipt?.depositOriginName ?? "",
+    depositOriginBank: receipt?.depositOriginBank ?? "",
+    depositOriginAgency: receipt?.depositOriginAgency ?? "",
+    depositOriginAccount: receipt?.depositOriginAccount ?? "",
+    depositOriginDocument: receipt?.depositOriginDocument ?? "",
+    depositAmount: receipt?.depositAmount != null ? String(receipt.depositAmount) : "",
+    depositDateTime: receipt?.depositDateTime ? receipt.depositDateTime.slice(0, 16) : "",
+    description: receipt?.description ?? "",
+    depositDestinationName: receipt?.depositDestinationName ?? "",
+    depositDestinationBank: receipt?.depositDestinationBank ?? "",
+    depositDestinationDocument: receipt?.depositDestinationDocument ?? "",
+    depositDestinationAccount: receipt?.depositDestinationAccount ?? "",
+  };
+}
+
+function EditableField({
+  id,
+  label,
+  isEditing,
+  displayValue,
+  editSlot,
+}: {
+  id: string;
   label: string;
-  value: string | null | undefined;
-  analysing: boolean;
-  mono?: boolean;
+  isEditing: boolean;
+  displayValue: React.ReactNode;
+  editSlot: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between">
-      <div className="text-sm text-muted-foreground">{label}</div>
-      <div className={`text-sm font-medium text-right max-w-[60%] break-all ${mono ? "font-mono" : ""}`}>
-        {value != null
-          ? value
-          : analysing
-            ? <Skeleton className="h-4 w-32" />
-            : <span className="text-muted-foreground">-</span>
-        }
-      </div>
+    <div className="flex items-center justify-between gap-4">
+      {isEditing
+        ? <Label htmlFor={id} className="text-sm text-muted-foreground font-normal shrink-0">{label}</Label>
+        : <div className="text-sm text-muted-foreground">{label}</div>
+      }
+      {isEditing
+        ? <div className="w-[60%] space-y-1">{editSlot}</div>
+        : displayValue
+      }
     </div>
   );
-  
 }
 
 function WarningItem({ warning, onResolve }: { warning: ReceiptWarning; onResolve?: () => void }) {
@@ -81,27 +125,24 @@ export default function ReceiptDetailsPage({
   const [deleting, setDeleting] = useState(false);
   const [resolvingWarningId, setResolvingWarningId] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [payerData, setPayerData] = useState({
-    depositOriginName: "",
-    depositOriginAgency: "",
-    depositOriginAccount: "",
-    depositOriginDocument: "",
-    depositOriginBank: "",
-    description: "",
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<ReceiptEditValues>({
+    resolver: zodResolver(receiptEditSchema),
+    defaultValues: toEditValues(null),
   });
 
   const fetchReceipt = useCallback(async () => {
     try {
       const data = await getReceipt(id);
       setReceipt(data);
-      setPayerData({
-        depositOriginName: data.depositOriginName ?? "",
-        depositOriginAgency: data.depositOriginAgency ?? "",
-        depositOriginAccount: data.depositOriginAccount ?? "",
-        depositOriginDocument: data.depositOriginDocument ?? "",
-        depositOriginBank: data.depositOriginBank ?? "",
-        description: data.description ?? "",
-      });
+      reset(toEditValues(data));
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) {
         setNotFound(true);
@@ -111,7 +152,7 @@ export default function ReceiptDetailsPage({
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, reset]);
 
   useEffect(() => {
     fetchReceipt();
@@ -144,31 +185,17 @@ export default function ReceiptDetailsPage({
     );
   }
 
-  const status = statusConfig[receipt.status] ?? {
-    label: receipt.status,
-    variant: "secondary" as const,
-    bgColor: "bg-muted",
-    textClass: "text-muted-foreground",
-    badgeClass: "",
-  };
   const analysing = receipt.status === "ANALYSING";
   const datetime = receipt.depositDateTime ? formatDateTime(receipt.depositDateTime) : null;
   const imageUrl = receipt.blob?.[0]?.fileUrl ?? null;
-  const hasWarnings = receipt.warnings?.length > 0;
+  const hasWarnings = receipt.warnings.length > 0;
 
   function handleCancelEdit() {
-    setPayerData({
-      depositOriginName: receipt!.depositOriginName ?? "",
-      depositOriginAgency: receipt!.depositOriginAgency ?? "",
-      depositOriginAccount: receipt!.depositOriginAccount ?? "",
-      depositOriginDocument: receipt!.depositOriginDocument ?? "",
-      depositOriginBank: receipt!.depositOriginBank ?? "",
-      description: receipt!.description ?? "",
-    });
+    reset(toEditValues(receipt!));
     setIsEditing(false);
   }
 
-  function handleSave() {
+  function handleSave(_data: ReceiptEditValues) {
     toast.info("Edição será habilitada em breve.");
     setIsEditing(false);
   }
@@ -317,7 +344,7 @@ export default function ReceiptDetailsPage({
                     <X className="size-4" />
                     Cancelar
                   </Button>
-                  <Button size="sm" onClick={handleSave}>
+                  <Button size="sm" onClick={handleSubmit(handleSave)}>
                     <Check className="size-4" />
                     Salvar
                   </Button>
@@ -331,79 +358,136 @@ export default function ReceiptDetailsPage({
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {(["depositOriginName", "depositOriginBank", "depositOriginAgency", "depositOriginAccount", "depositOriginDocument"] as const).map((field) => {
-                  const labels: Record<string, string> = {
-                    depositOriginName: "Nome",
-                    depositOriginBank: "Banco",
-                    depositOriginAgency: "Agência",
-                    depositOriginAccount: "Conta",
-                    depositOriginDocument: "CPF/CNPJ",
-                  };
-                  return (
-                    <div key={field} className="flex items-center justify-between">
-                      <div className="text-sm text-muted-foreground">{labels[field]}</div>
-                      {isEditing ? (
-                        <Input
-                          aria-label={labels[field]}
-                          className="w-[60%] h-8 text-sm"
-                          value={payerData[field]}
-                          onChange={(e) => setPayerData({ ...payerData, [field]: e.target.value })}
-                        />
-                      ) : (
-                        <div className="text-sm font-medium">
-                          {receipt[field] != null
-                            ? receipt[field]
-                            : analysing
-                              ? <Skeleton className="h-4 w-32" />
-                              : <span className="text-muted-foreground">-</span>
-                          }
-                        </div>
-                      )}
+                <EditableField
+                  id="field-pixTransactionId"
+                  label="ID da Transação"
+                  isEditing={isEditing}
+                  displayValue={
+                    <div className="text-sm font-medium font-mono text-right max-w-[60%] break-all">
+                      {receipt.pixTransactionId ?? (analysing ? <Skeleton className="h-4 w-40" /> : <span className="text-muted-foreground">-</span>)}
                     </div>
-                  );
-                })}
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-muted-foreground">Valor</div>
-                  <div className="text-sm font-semibold text-success">
-                    {receipt.depositAmount != null
-                      ? formatCurrency(receipt.depositAmount)
-                      : analysing
-                        ? <Skeleton className="h-4 w-20" />
-                        : <span className="text-muted-foreground">-</span>
+                  }
+                  editSlot={
+                    <>
+                      <Input
+                        id="field-pixTransactionId"
+                        className="h-8 text-sm font-mono"
+                        aria-invalid={!!errors.pixTransactionId}
+                        aria-describedby={errors.pixTransactionId ? "error-pixTransactionId" : undefined}
+                        {...register("pixTransactionId")}
+                      />
+                      <FormErrorMessage id="error-pixTransactionId" message={errors.pixTransactionId?.message} />
+                    </>
+                  }
+                />
+
+                {payerFields.map(({ key, label }) => (
+                  <EditableField
+                    key={key}
+                    id={`field-${key}`}
+                    label={label}
+                    isEditing={isEditing}
+                    displayValue={
+                      <div className="text-sm font-medium">
+                        {receipt[key] ?? (analysing ? <Skeleton className="h-4 w-32" /> : <span className="text-muted-foreground">-</span>)}
+                      </div>
                     }
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-muted-foreground">Data e Hora</div>
-                  <div className="text-sm font-medium">
-                    {datetime
-                      ? `${datetime.date}, ${datetime.time}`
-                      : analysing
-                        ? <Skeleton className="h-4 w-32" />
-                        : <span className="text-muted-foreground">-</span>
+                    editSlot={
+                      <>
+                        <Input
+                          id={`field-${key}`}
+                          className="h-8 text-sm"
+                          aria-invalid={!!errors[key]}
+                          aria-describedby={errors[key] ? `error-${key}` : undefined}
+                          {...register(key)}
+                        />
+                        <FormErrorMessage id={`error-${key}`} message={errors[key]?.message} />
+                      </>
                     }
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-muted-foreground">Descrição</div>
-                  {isEditing ? (
-                    <Input
-                      aria-label="Descrição"
-                      className="w-[60%] h-8 text-sm"
-                      value={payerData.description}
-                      onChange={(e) => setPayerData({ ...payerData, description: e.target.value })}
-                    />
-                  ) : (
-                    <div className="text-sm font-medium text-right max-w-[60%]">
-                      {receipt.description != null
-                        ? receipt.description
-                        : analysing
-                          ? <Skeleton className="h-4 w-40" />
-                          : <span className="text-muted-foreground">-</span>
+                  />
+                ))}
+
+                <EditableField
+                  id="field-depositAmount"
+                  label="Valor"
+                  isEditing={isEditing}
+                  displayValue={
+                    <div className="text-sm font-semibold text-success">
+                      {receipt.depositAmount != null
+                        ? formatCurrency(receipt.depositAmount)
+                        : analysing ? <Skeleton className="h-4 w-20" /> : <span className="text-muted-foreground font-normal">-</span>
                       }
                     </div>
-                  )}
-                </div>
+                  }
+                  editSlot={
+                    <>
+                      <CurrencyInput
+                        id="field-depositAmount"
+                        placeholder="R$ 0,00"
+                        intlConfig={{ locale: "pt-BR", currency: "BRL" }}
+                        decimalsLimit={2}
+                        value={watch("depositAmount")}
+                        onValueChange={(_val, _name, values) =>
+                          setValue("depositAmount", values?.float?.toString() ?? "", { shouldValidate: true })
+                        }
+                        aria-invalid={!!errors.depositAmount}
+                        aria-describedby={errors.depositAmount ? "error-depositAmount" : undefined}
+                        className={inputBaseClasses + " h-8 text-sm"}
+                      />
+                      <FormErrorMessage id="error-depositAmount" message={errors.depositAmount?.message} />
+                    </>
+                  }
+                />
+
+                <EditableField
+                  id="field-depositDateTime"
+                  label="Data e Hora"
+                  isEditing={isEditing}
+                  displayValue={
+                    <div className="text-sm font-medium">
+                      {datetime
+                        ? `${datetime.date}, ${datetime.time}`
+                        : analysing ? <Skeleton className="h-4 w-32" /> : <span className="text-muted-foreground">-</span>
+                      }
+                    </div>
+                  }
+                  editSlot={
+                    <>
+                      <Input
+                        id="field-depositDateTime"
+                        type="datetime-local"
+                        className="h-8 text-sm"
+                        aria-invalid={!!errors.depositDateTime}
+                        aria-describedby={errors.depositDateTime ? "error-depositDateTime" : undefined}
+                        {...register("depositDateTime")}
+                      />
+                      <FormErrorMessage id="error-depositDateTime" message={errors.depositDateTime?.message} />
+                    </>
+                  }
+                />
+
+                <EditableField
+                  id="field-description"
+                  label="Descrição"
+                  isEditing={isEditing}
+                  displayValue={
+                    <div className="text-sm font-medium text-right max-w-[60%]">
+                      {receipt.description ?? (analysing ? <Skeleton className="h-4 w-40" /> : <span className="text-muted-foreground">-</span>)}
+                    </div>
+                  }
+                  editSlot={
+                    <>
+                      <Input
+                        id="field-description"
+                        className="h-8 text-sm"
+                        aria-invalid={!!errors.description}
+                        aria-describedby={errors.description ? "error-description" : undefined}
+                        {...register("description")}
+                      />
+                      <FormErrorMessage id="error-description" message={errors.description?.message} />
+                    </>
+                  }
+                />
               </div>
             </CardContent>
           </Card>
@@ -414,10 +498,31 @@ export default function ReceiptDetailsPage({
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <Field label="Nome" value={receipt.depositDestinationName} analysing={analysing} />
-                <Field label="Banco" value={receipt.depositDestinationBank} analysing={analysing} />
-                <Field label="CPF/CNPJ" value={receipt.depositDestinationDocument} analysing={analysing} />
-                <Field label="Conta/Chave PIX" value={receipt.depositDestinationAccount} analysing={analysing} mono />
+                {receiverFields.map(({ key, label, mono }) => (
+                  <EditableField
+                    key={key}
+                    id={`field-${key}`}
+                    label={label}
+                    isEditing={isEditing}
+                    displayValue={
+                      <div className={`text-sm font-medium text-right max-w-[60%] break-all${mono ? " font-mono" : ""}`}>
+                        {receipt[key] ?? (analysing ? <Skeleton className="h-4 w-32" /> : <span className="text-muted-foreground">-</span>)}
+                      </div>
+                    }
+                    editSlot={
+                      <>
+                        <Input
+                          id={`field-${key}`}
+                          className={`h-8 text-sm${mono ? " font-mono" : ""}`}
+                          aria-invalid={!!errors[key]}
+                          aria-describedby={errors[key] ? `error-${key}` : undefined}
+                          {...register(key)}
+                        />
+                        <FormErrorMessage id={`error-${key}`} message={errors[key]?.message} />
+                      </>
+                    }
+                  />
+                ))}
               </div>
             </CardContent>
           </Card>
