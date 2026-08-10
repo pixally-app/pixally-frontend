@@ -16,12 +16,11 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ResolveWarningDialog } from "@/components/receipts/resolve-warning-dialog";
 import { FormErrorMessage } from "@/components/ui/form-error-message";
 import { toast } from "sonner";
-import { getReceipt, deleteReceipt, type Receipt, type ReceiptWarning } from "@/services/receipts";
+import { getReceipt, updateReceipt, deleteReceipt, type Receipt, type ReceiptWarning } from "@/services/receipts";
 import { ApiError } from "@/lib/api-error";
 import { formatCurrency, formatDateTime } from "@/lib/formatters";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { receiptEditSchema, type ReceiptEditValues } from "@/schemas/receipt-edit";
-
 
 const payerFields = [
   { key: "depositOriginName", label: "Nome" },
@@ -123,6 +122,7 @@ export default function ReceiptDetailsPage({
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [resolvingWarningId, setResolvingWarningId] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -195,9 +195,33 @@ export default function ReceiptDetailsPage({
     setIsEditing(false);
   }
 
-  function handleSave(_data: ReceiptEditValues) {
-    toast.info("Edição será habilitada em breve.");
-    setIsEditing(false);
+  async function handleSave(data: ReceiptEditValues) {
+    try {
+      setSaving(true);
+      const updated = await updateReceipt(id, {
+        pixTransactionId: data.pixTransactionId || null,
+        depositOriginName: data.depositOriginName || null,
+        depositOriginBank: data.depositOriginBank || null,
+        depositOriginAgency: data.depositOriginAgency || null,
+        depositOriginAccount: data.depositOriginAccount || null,
+        depositOriginDocument: data.depositOriginDocument || null,
+        depositAmount: data.depositAmount ? parseFloat(data.depositAmount) : null,
+        depositDateTime: data.depositDateTime || null,
+        description: data.description || null,
+        depositDestinationName: data.depositDestinationName || null,
+        depositDestinationBank: data.depositDestinationBank || null,
+        depositDestinationDocument: data.depositDestinationDocument || null,
+        depositDestinationAccount: data.depositDestinationAccount || null,
+      });
+      setReceipt(updated);
+      reset(toEditValues(updated));
+      setIsEditing(false);
+      toast.success("Comprovante atualizado.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao salvar alterações.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   function handleResolveWarning(reason: string) {
@@ -286,7 +310,7 @@ export default function ReceiptDetailsPage({
                         </Button>
                         <span className="text-xs text-muted-foreground">Scroll para zoom · Arraste para mover</span>
                       </div>
-                      <div className="flex-1 rounded-lg bg-muted overflow-hidden cursor-grab active:cursor-grabbing min-h-[300px]">
+                      <div className="flex-1 rounded-lg bg-muted overflow-hidden cursor-grab active:cursor-grabbing min-h-[300px] touch-none">
                         <TransformComponent
                           wrapperStyle={{ width: "100%", height: "100%" }}
                           contentStyle={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}
@@ -340,12 +364,12 @@ export default function ReceiptDetailsPage({
               <CardTitle className="text-lg font-bold">Dados do Pagador</CardTitle>
               {isEditing ? (
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={handleCancelEdit}>
+                  <Button variant="outline" size="sm" disabled={saving} onClick={handleCancelEdit}>
                     <X className="size-4" />
                     Cancelar
                   </Button>
-                  <Button size="sm" onClick={handleSubmit(handleSave)}>
-                    <Check className="size-4" />
+                  <Button size="sm" disabled={saving} onClick={handleSubmit(handleSave)}>
+                    {saving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                     Salvar
                   </Button>
                 </div>

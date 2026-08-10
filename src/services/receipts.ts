@@ -111,6 +111,34 @@ export async function deleteReceipt(id: string): Promise<void> {
   }
 }
 
+export interface UpdateReceiptPayload {
+  pixTransactionId?: string | null;
+  depositOriginName?: string | null;
+  depositOriginBank?: string | null;
+  depositOriginAgency?: string | null;
+  depositOriginAccount?: string | null;
+  depositOriginDocument?: string | null;
+  depositAmount?: number | null;
+  depositDateTime?: string | null;
+  description?: string | null;
+  depositDestinationName?: string | null;
+  depositDestinationBank?: string | null;
+  depositDestinationDocument?: string | null;
+  depositDestinationAccount?: string | null;
+  clientId?: string;
+}
+
+export async function updateReceipt(id: string, data: UpdateReceiptPayload): Promise<Receipt> {
+  try {
+    const response = await api.patch<Receipt>(`/receipts/${id}`, data);
+    return response.data;
+  } catch (err) {
+    throw resolveApiError(err, {
+      404: "Comprovante não encontrado.",
+    }, "Erro ao salvar alterações.");
+  }
+}
+
 export async function uploadReceipt(file: File): Promise<Receipt> {
   try {
     const formData = new FormData();
