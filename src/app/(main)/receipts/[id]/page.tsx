@@ -21,6 +21,7 @@ import { ApiError } from "@/lib/api-error";
 import { formatCurrency, formatDateTime } from "@/lib/formatters";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { receiptEditSchema, type ReceiptEditValues } from "@/schemas/receipt-edit";
+import { ReconciliationCard } from "@/components/receipts/reconciliation-card";
 
 const payerFields = [
   { key: "depositOriginName", label: "Nome" },
@@ -350,14 +351,7 @@ export default function ReceiptDetailsPage({
             </div>
           )}
 
-          {receipt.client && (
-            <Card>
-              <CardContent className="p-4">
-                <p className="text-sm text-muted-foreground mb-1">Cliente vinculado</p>
-                <p className="font-semibold">{receipt.client.name}</p>
-              </CardContent>
-            </Card>
-          )}
+          <ReconciliationCard receipt={receipt} onUpdate={setReceipt} />
 
           <Card>
             <CardHeader className="flex-row items-center justify-between space-y-0">

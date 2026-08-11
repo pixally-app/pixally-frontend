@@ -1,5 +1,6 @@
 import { api } from "./api";
 import { resolveApiError } from "@/lib/api-error";
+import type { AccountReceivable } from "./receivables";
 
 export type ReceiptStatus = "ANALYSING" | "RECEIVED" | "RED_FLAG" | "YELLOW_FLAG" | "ERROR" | "RECONCILED";
 export type ReceiptOrigin = "whatsapp" | "manual";
@@ -61,6 +62,7 @@ export interface Receipt {
   blob: ReceiptBlob[];
   warnings: ReceiptWarning[];
   client: ReceiptClient | null;
+  accountsReceivable: AccountReceivable[];
   createdAt: string;
   updatedAt: string;
 }
@@ -112,20 +114,24 @@ export async function deleteReceipt(id: string): Promise<void> {
 }
 
 export interface UpdateReceiptPayload {
+  clientId?: string;
+  status?: string;
   pixTransactionId?: string | null;
+  description?: string | null;
+  depositAmount?: number | null;
+  depositDateTime?: string | null;
   depositOriginName?: string | null;
+  depositOriginDocument?: string | null;
+  depositOriginDocumentType?: string | null;
   depositOriginBank?: string | null;
   depositOriginAgency?: string | null;
   depositOriginAccount?: string | null;
-  depositOriginDocument?: string | null;
-  depositAmount?: number | null;
-  depositDateTime?: string | null;
-  description?: string | null;
   depositDestinationName?: string | null;
-  depositDestinationBank?: string | null;
   depositDestinationDocument?: string | null;
+  depositDestinationDocumentType?: string | null;
+  depositDestinationBank?: string | null;
+  depositDestinationAgency?: string | null;
   depositDestinationAccount?: string | null;
-  clientId?: string;
 }
 
 export async function updateReceipt(id: string, data: UpdateReceiptPayload): Promise<Receipt> {
@@ -136,6 +142,30 @@ export async function updateReceipt(id: string, data: UpdateReceiptPayload): Pro
     throw resolveApiError(err, {
       404: "Comprovante não encontrado.",
     }, "Erro ao salvar alterações.");
+  }
+}
+
+export async function unreconcileReceipt(id: string): Promise<Receipt> {
+  try {
+    const response = await api.patch<Receipt>(`/receipts/${id}/unreconcile`);
+    return response.data;
+  } catch (err) {
+    throw resolveApiError(err, {
+      400: "Comprovante não está conciliado.",
+      404: "Comprovante não encontrado.",
+    }, "Erro ao desvincular comprovante.");
+  }
+}
+
+export async function reconcileReceipt(id: string, accountReceivableId: string): Promise<Receipt> {
+  try {
+    const response = await api.patch<Receipt>(`/receipts/${id}/reconcile`, { accountReceivableId });
+    return response.data;
+  } catch (err) {
+    throw resolveApiError(err, {
+      400: "Não é possível conciliar com uma conta cancelada.",
+      404: "Comprovante ou conta a receber não encontrados.",
+    }, "Erro ao conciliar comprovante.");
   }
 }
 

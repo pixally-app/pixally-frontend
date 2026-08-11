@@ -116,7 +116,7 @@ export function InstallmentsCard({
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-sm text-muted-foreground hidden sm:block">
-                    {formatDate(inst.dueDate)}
+                    {formatDate(inst.status === "PAID" && inst.paidAt ? inst.paidAt : inst.dueDate)}
                   </span>
                   <span className="text-sm font-semibold">
                     {formatCurrency(inst.amount)}
