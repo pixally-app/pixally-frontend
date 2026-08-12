@@ -14,11 +14,16 @@ export interface Installment {
   updatedAt: string;
 }
 
+export interface ReceiptRef {
+  id: string;
+  depositAmount: number | null;
+  depositDateTime: string | null;
+}
+
 export interface AccountReceivable {
   id: string;
   userId: string;
   clientId: string;
-  pixReceiptId: string | null;
   clientName: string | null;
   serviceName: string | null;
   serviceDescription: string | null;
@@ -30,6 +35,7 @@ export interface AccountReceivable {
   payStub: string | null;
   matchedAutomatically: boolean | null;
   installments?: Installment[];
+  receipts?: ReceiptRef[];
   createdAt: string;
   updatedAt: string;
 }
@@ -51,7 +57,6 @@ export interface ListReceivablesParams {
 
 export interface CreateReceivableData {
   clientId: string;
-  pixReceiptId?: string;
   serviceName?: string;
   serviceDescription?: string;
   totalAmount: number;
@@ -61,7 +66,6 @@ export interface CreateReceivableData {
 }
 
 export interface UpdateReceivableData {
-  pixReceiptId?: string;
   serviceName?: string;
   serviceDescription?: string;
   totalAmount?: number;

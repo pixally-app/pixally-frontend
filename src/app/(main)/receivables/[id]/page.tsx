@@ -288,14 +288,20 @@ export default function ReceivableDetailsPage({
           <CardTitle className="text-lg font-bold">PIX Vinculado</CardTitle>
         </CardHeader>
         <CardContent>
-          {receivable.pixReceiptId ? (
-            <Link
-              href={`/receipts/${receivable.pixReceiptId}`}
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary"
-            >
-              Ver comprovante PIX
-              <ArrowRight className="size-3.5" />
-            </Link>
+          {receivable.receipts && receivable.receipts.length > 0 ? (
+            <ul className="space-y-2">
+              {receivable.receipts.map((r, i) => (
+                <li key={r.id}>
+                  <Link
+                    href={`/receipts/${r.id}`}
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-primary"
+                  >
+                    Comprovante {receivable.receipts!.length > 1 ? `${i + 1}` : "PIX"}
+                    <ArrowRight className="size-3.5" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
           ) : (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <FileText className="size-10 text-muted-foreground mb-3" />

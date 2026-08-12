@@ -59,10 +59,12 @@ export interface Receipt {
   jid: string | null;
   messageId: string | null;
   isDeletedWhatsapp: boolean | null;
+  accountReceivableId: string | null;
+  installmentId: string | null;
   blob: ReceiptBlob[];
   warnings: ReceiptWarning[];
   client: ReceiptClient | null;
-  accountsReceivable: AccountReceivable[];
+  accountReceivable: AccountReceivable | null;
   createdAt: string;
   updatedAt: string;
 }

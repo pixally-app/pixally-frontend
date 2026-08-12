@@ -26,7 +26,7 @@ interface ReconciliationCardProps {
 
 export function ReconciliationCard({ receipt, onUpdate: _onUpdate }: ReconciliationCardProps) {
   const isReconciled = receipt.status === "RECONCILED" || receipt.clientId !== null;
-  const linkedReceivable = receipt.accountsReceivable?.[0] ?? null;
+  const linkedReceivable = receipt.accountReceivable ?? null;
 
   const [mode, setMode] = useState<"view" | "linking">("view");
   const [clients, setClients] = useState<Client[]>([]);
