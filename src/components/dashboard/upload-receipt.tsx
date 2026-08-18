@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { uploadReceipt } from "@/services/receipts";
 
 const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/jpg", "application/pdf"];
-const MAX_SIZE_MB = 10;
+const MAX_SIZE_MB = 5;
 
 const steps = [
   "Upload manual ou captura automática via WhatsApp",
@@ -106,7 +106,7 @@ export function UploadReceipt() {
           </p>
           {!uploading && (
             <p className="mt-1 text-xs text-muted-foreground">
-              PNG, JPG ou PDF até 10MB
+              PNG, JPG ou PDF até 5MB
             </p>
           )}
         </div>
