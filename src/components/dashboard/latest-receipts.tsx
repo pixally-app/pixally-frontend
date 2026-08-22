@@ -1,92 +1,94 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { MessageCircle, ArrowUpFromLine } from "lucide-react";
-
-const statusConfig = {
-  conciliado: { label: "Conciliado", variant: "success" as const },
-  problema: { label: "Problema", variant: "destructive" as const },
-  alerta: { label: "Alerta", variant: "warning" as const },
-  recebido: { label: "Recebido", variant: "default" as const },
-};
-
-const receipts = [
-  {
-    id: "1",
-    name: "João Silva",
-    date: "26/02/2026, 14:30:00",
-    amount: "R$ 150,00",
-    status: "conciliado" as const,
-    source: "whatsapp" as const,
-  },
-  {
-    id: "2",
-    name: "Maria Santos",
-    date: "26/02/2026, 15:45:00",
-    amount: "R$ 200,50",
-    status: "conciliado" as const,
-    source: "whatsapp" as const,
-  },
-  {
-    id: "3",
-    name: "Pedro Costa",
-    date: "26/02/2026, 16:20:00",
-    amount: "R$ 150,00",
-    status: "problema" as const,
-    source: "whatsapp" as const,
-  },
-  {
-    id: "4",
-    name: "Ana Paula Oliveira",
-    date: "26/02/2026, 17:10:00",
-    amount: "R$ 320,00",
-    status: "conciliado" as const,
-    source: "whatsapp" as const,
-  },
-  {
-    id: "5",
-    name: "Carlos Mendes",
-    date: "26/02/2026, 18:00:00",
-    amount: "R$ 0,00",
-    status: "alerta" as const,
-    source: "whatsapp" as const,
-  },
-  {
-    id: "6",
-    name: "Juliana Ferreira",
-    date: "25/02/2026, 10:30:00",
-    amount: "R$ 180,00",
-    status: "recebido" as const,
-    source: "upload" as const,
-  },
-];
+import { listReceipts, type Receipt } from "@/services/receipts";
+import { statusConfig } from "@/components/receipts/status-config";
+import { formatCurrency, formatDateTime } from "@/lib/formatters";
 
 export function LatestReceipts() {
+  const [receipts, setReceipts] = useState<Receipt[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    listReceipts({ limit: 6 })
+      .then((res) => setReceipts(res.data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="divide-y divide-border">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-4 py-4 px-3">
+            <div className="rounded-full bg-muted size-10 animate-pulse shrink-0" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+              <div className="h-3 w-24 bg-muted rounded animate-pulse" />
+            </div>
+            <div className="space-y-2 text-right">
+              <div className="h-4 w-16 bg-muted rounded animate-pulse ml-auto" />
+              <div className="h-4 w-20 bg-muted rounded animate-pulse ml-auto" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (receipts.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground text-center py-8">
+        Nenhum comprovante encontrado.
+      </p>
+    );
+  }
+
   return (
     <div className="divide-y divide-border">
       {receipts.map((receipt) => {
-        const status = statusConfig[receipt.status];
+        const status = statusConfig[receipt.status] ?? {
+          label: receipt.status,
+          badgeClass: "",
+        };
+        const name = receipt.client?.name ?? receipt.depositOriginName ?? "—";
+        const datetime = receipt.depositDateTime
+          ? formatDateTime(receipt.depositDateTime)
+          : null;
+
         return (
-          <div
+          <Link
             key={receipt.id}
-            className="flex items-center gap-4 py-4 px-3 -mx-3 rounded-md transition-colors"
+            href={`/receipts/${receipt.id}`}
+            className="flex items-center gap-4 py-4 px-3 -mx-3 rounded-md transition-colors hover:bg-muted/50"
           >
-            <div className="rounded-full bg-muted p-2.5 text-muted-foreground">
-              {receipt.source === "whatsapp" ? (
+            <div className="rounded-full bg-muted p-2.5 text-muted-foreground shrink-0">
+              {receipt.origin === "whatsapp" ? (
                 <MessageCircle className="size-5" />
               ) : (
                 <ArrowUpFromLine className="size-5" />
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium truncate">{receipt.name}</p>
-              <p className="text-sm text-muted-foreground">{receipt.date}</p>
+              <p className="font-medium truncate">{name}</p>
+              <p className="text-sm text-muted-foreground">
+                {datetime ? `${datetime.date}, ${datetime.time}` : "—"}
+              </p>
             </div>
             <div className="text-right space-y-1">
-              <p className="font-semibold text-success">{receipt.amount}</p>
-              <Badge variant={status.variant} className="text-[11px]">
+              <p className="font-semibold text-success">
+                {receipt.depositAmount != null
+                  ? formatCurrency(receipt.depositAmount)
+                  : "—"}
+              </p>
+              <Badge className={`text-[11px] ${status.badgeClass}`}>
                 {status.label}
               </Badge>
             </div>
-          </div>
+          </Link>
         );
       })}
     </div>
