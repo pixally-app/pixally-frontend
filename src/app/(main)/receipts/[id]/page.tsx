@@ -17,6 +17,7 @@ import { ResolveWarningDialog } from "@/components/receipts/resolve-warning-dial
 import { FormErrorMessage } from "@/components/ui/form-error-message";
 import { toast } from "sonner";
 import { getReceipt, updateReceipt, deleteReceipt, type Receipt, type ReceiptWarning } from "@/services/receipts";
+import { resolveWarning } from "@/services/warnings";
 import { ApiError } from "@/lib/api-error";
 import { formatCurrency, formatDateTime } from "@/lib/formatters";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
@@ -225,18 +226,21 @@ export default function ReceiptDetailsPage({
     }
   }
 
-  function handleResolveWarning(reason: string) {
+  async function handleResolveWarning(reason: string) {
     if (!resolvingWarningId || !receipt) return;
-    setReceipt({
-      ...receipt,
-      warnings: receipt.warnings.map((w) =>
-        w.id === resolvingWarningId
-          ? { ...w, resolved: true, resolutionReason: reason, resolvedAt: new Date().toISOString() }
-          : w
-      ),
-    });
-    setResolvingWarningId(null);
-    toast.success("Alerta resolvido com sucesso.");
+    try {
+      const updated = await resolveWarning(resolvingWarningId, reason);
+      setReceipt({
+        ...receipt,
+        warnings: receipt.warnings.map((w) =>
+          w.id === resolvingWarningId ? { ...w, ...updated } : w
+        ),
+      });
+      setResolvingWarningId(null);
+      toast.success("Alerta resolvido com sucesso.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao resolver alerta.");
+    }
   }
 
   async function handleDelete() {
