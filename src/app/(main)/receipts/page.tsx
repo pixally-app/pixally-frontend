@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -79,61 +79,57 @@ export default function ReceiptsPage() {
         </p>
       </div>
 
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="relative w-full sm:max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por cliente"
-                aria-label="Buscar por cliente"
-                className="pl-9"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="relative w-full sm:max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por cliente"
+            aria-label="Buscar por cliente"
+            className="pl-9"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
 
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="RECONCILED">Conciliado</SelectItem>
-                  <SelectItem value="RECEIVED">Recebido</SelectItem>
-                  <SelectItem value="ANALYSING">Analisando</SelectItem>
-                  <SelectItem value="YELLOW_FLAG">Alerta</SelectItem>
-                  <SelectItem value="RED_FLAG">Alerta Vermelho</SelectItem>
-                  <SelectItem value="ERROR">Erro</SelectItem>
-                </SelectContent>
-              </Select>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="RECONCILED">Conciliado</SelectItem>
+              <SelectItem value="RECEIVED">Recebido</SelectItem>
+              <SelectItem value="ANALYSING">Analisando</SelectItem>
+              <SelectItem value="YELLOW_FLAG">Alerta</SelectItem>
+              <SelectItem value="RED_FLAG">Alerta Vermelho</SelectItem>
+              <SelectItem value="ERROR">Erro</SelectItem>
+            </SelectContent>
+          </Select>
 
-              <Select value={originFilter} onValueChange={setOriginFilter}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Origem" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                  <SelectItem value="manual">Manual</SelectItem>
-                </SelectContent>
-              </Select>
+          <Select value={originFilter} onValueChange={setOriginFilter}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Origem" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="whatsapp">WhatsApp</SelectItem>
+              <SelectItem value="manual">Manual</SelectItem>
+            </SelectContent>
+          </Select>
 
-              <Button className="ml-auto sm:ml-0">
-                <Download className="size-4" />
-                Exportar CSV
-              </Button>
-            </div>
-          </div>
+          <Button className="ml-auto sm:ml-0">
+            <Download className="size-4" />
+            Exportar CSV
+          </Button>
+        </div>
+      </div>
 
-          {!loading && (
-            <p className="text-sm text-muted-foreground mt-4">
-              {total} comprovante(s) encontrado(s)
-            </p>
-          )}
-        </CardContent>
-      </Card>
+      {!loading && (
+        <p className="text-sm text-muted-foreground -mt-2">
+          {total} comprovante(s) encontrado(s)
+        </p>
+      )}
 
       <Card>
         <Table>
