@@ -101,8 +101,8 @@ export default function ReceiptsPage() {
               <SelectItem value="RECONCILED">Conciliado</SelectItem>
               <SelectItem value="RECEIVED">Recebido</SelectItem>
               <SelectItem value="ANALYSING">Analisando</SelectItem>
-              <SelectItem value="YELLOW_FLAG">Alerta</SelectItem>
-              <SelectItem value="RED_FLAG">Alerta Vermelho</SelectItem>
+              <SelectItem value="YELLOW_FLAG">Atenção</SelectItem>
+              <SelectItem value="RED_FLAG">Crítico</SelectItem>
               <SelectItem value="ERROR">Erro</SelectItem>
             </SelectContent>
           </Select>

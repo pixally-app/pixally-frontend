@@ -12,8 +12,8 @@ export const statusConfig: Record<
 > = {
   ANALYSING:   { label: "Analisando", variant: "secondary",   bgColor: "bg-secondary/30",  textClass: "text-muted-foreground", badgeClass: "bg-secondary/30 text-secondary-foreground border-secondary/30" },
   RECEIVED:    { label: "Recebido",   variant: "success",     bgColor: "bg-success/10",     textClass: "text-success",          badgeClass: "bg-success/10 text-success border-success/20"                   },
-  RED_FLAG:    { label: "Alerta",     variant: "destructive", bgColor: "bg-destructive/10", textClass: "text-destructive",      badgeClass: "bg-destructive/10 text-destructive border-destructive/20"       },
-  YELLOW_FLAG: { label: "Alerta",     variant: "warning",     bgColor: "bg-warning/10",     textClass: "text-warning",          badgeClass: "bg-warning/10 text-warning border-warning/20"                   },
+  RED_FLAG:    { label: "Crítico",    variant: "destructive", bgColor: "bg-destructive/10", textClass: "text-destructive",      badgeClass: "bg-destructive/10 text-destructive border-destructive/20"       },
+  YELLOW_FLAG: { label: "Atenção",    variant: "warning",     bgColor: "bg-warning/10",     textClass: "text-warning",          badgeClass: "bg-warning/10 text-warning border-warning/20"                   },
   ERROR:       { label: "Erro",       variant: "destructive", bgColor: "bg-destructive/10", textClass: "text-destructive",      badgeClass: "bg-destructive/10 text-destructive border-destructive/20"       },
   RECONCILED:  { label: "Conciliado", variant: "success",     bgColor: "bg-success/10",     textClass: "text-success",          badgeClass: "bg-success/10 text-success border-success/20"                   },
 };
