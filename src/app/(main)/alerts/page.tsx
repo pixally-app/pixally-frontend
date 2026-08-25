@@ -1,79 +1,94 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Eye } from "lucide-react";
+import { Pagination } from "@/components/ui/pagination";
+import { AlertTriangle, Eye, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { warnings, warningTypeConfig, type WarningType } from "@/data/mock-alerts";
+import { listWarnings, resolveWarning, type Warning, type WarningType } from "@/services/warnings";
 import { formatDateTime } from "@/lib/formatters";
 import { ResolveAlertDialog } from "@/components/alerts/resolve-alert-dialog";
+import { toast } from "sonner";
 
-const borderColor: Record<WarningType, string> = {
-  critico: "border-destructive",
-  atencao: "border-warning",
+const LIMIT = 9;
+
+const warningConfig: Record<WarningType, { label: string; variant: "warning" | "destructive" }> = {
+  yellow: { label: "Atenção", variant: "warning" },
+  red: { label: "Crítico", variant: "destructive" },
 };
 
 const filters = [
-  { label: "Todos", value: "all" },
-  { label: "Atenção", value: "atencao" },
-  { label: "Crítico", value: "critico" },
+  { label: "Todos", value: "all", activeVariant: "default" },
+  { label: "Atenção", value: "yellow", activeVariant: "warning" },
+  { label: "Crítico", value: "red", activeVariant: "destructive" },
 ] as const;
 
 type FilterValue = (typeof filters)[number]["value"];
 
 const summaryCards = [
-  {
-    label: "Alertas Pendentes",
-    key: "total" as const,
-    color: "text-foreground",
-    icon: <AlertTriangle className="size-5 text-warning" />,
-  },
-  {
-    label: "Atenção (Amarelo)",
-    key: "atencao" as const,
-    color: "text-warning",
-    icon: <span className="size-3 rounded-full bg-warning" />,
-  },
-  {
-    label: "Crítico (Vermelho)",
-    key: "critico" as const,
-    color: "text-destructive",
-    icon: <span className="size-3 rounded-full bg-destructive" />,
-  },
+  { label: "Alertas Pendentes", key: "total" as const, color: "text-foreground", icon: <AlertTriangle className="size-5 text-warning" /> },
+  { label: "Atenção", key: "yellow" as const, color: "text-warning", icon: <span className="size-3 rounded-full bg-warning" /> },
+  { label: "Crítico", key: "red" as const, color: "text-destructive", icon: <span className="size-3 rounded-full bg-destructive" /> },
 ];
 
 export default function AlertsPage() {
+  const [warnings, setWarnings] = useState<Warning[]>([]);
+  const [summary, setSummary] = useState({ total: 0, yellow: 0, red: 0 });
+  const [totalPages, setTotalPages] = useState(1);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterValue>("all");
 
-  const pending = useMemo(
-    () => warnings.filter((w) => !w.resolved),
-    []
-  );
-
-  const filtered = useMemo(() => {
-    if (filter === "all") return pending;
-    return pending.filter((w) => w.type === filter);
-  }, [pending, filter]);
-
-  const summary = useMemo(() => {
-    let atencao = 0;
-    let critico = 0;
-    for (const w of pending) {
-      if (w.type === "atencao") atencao++;
-      else if (w.type === "critico") critico++;
+  const fetchWarnings = useCallback(async (p: number, f: FilterValue) => {
+    setLoading(true);
+    try {
+      const params = {
+        page: p,
+        limit: LIMIT,
+        ...(f !== "all" && { type: f as WarningType }),
+      };
+      const result = await listWarnings(params);
+      setWarnings(result.data);
+      setTotalPages(result.totalPages);
+      const yellow = result.yellowCount ?? 0;
+      const red = result.redCount ?? 0;
+      setSummary({ total: yellow + red, yellow, red });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao carregar alertas.");
+    } finally {
+      setLoading(false);
     }
-    return { total: pending.length, atencao, critico };
-  }, [pending]);
+  }, []);
+
+  useEffect(() => {
+    fetchWarnings(page, filter);
+  }, [fetchWarnings, page, filter]);
+
+  function handleFilterChange(value: FilterValue) {
+    setFilter(value);
+    setPage(1);
+  }
+
+  async function handleResolve(warningId: string, reason: string) {
+    try {
+      await resolveWarning(warningId, reason);
+      const isLastOnPage = warnings.length === 1 && page > 1;
+      const targetPage = isLastOnPage ? page - 1 : page;
+      if (isLastOnPage) setPage(targetPage);
+      else fetchWarnings(page, filter);
+      toast.success("Alerta resolvido com sucesso.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao resolver alerta.");
+    }
+  }
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Alertas</h1>
-        <p className="text-muted-foreground">
-          Central de problemas detectados pelo sistema
-        </p>
+        <p className="text-muted-foreground">Central de alertas detectados pelo sistema</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -84,9 +99,7 @@ export default function AlertsPage() {
                 <span className="text-sm text-muted-foreground">{card.label}</span>
                 {card.icon}
               </div>
-              <p className={`text-2xl font-bold ${card.color}`}>
-                {summary[card.key]}
-              </p>
+              <p className={`text-2xl font-bold ${card.color}`}>{summary[card.key]}</p>
             </CardContent>
           </Card>
         ))}
@@ -98,9 +111,9 @@ export default function AlertsPage() {
             {filters.map((f) => (
               <Button
                 key={f.value}
-                variant={filter === f.value ? "default" : "outline"}
+                variant={filter === f.value ? f.activeVariant : "outline"}
                 size="sm"
-                onClick={() => setFilter(f.value)}
+                onClick={() => handleFilterChange(f.value)}
               >
                 {f.label}
               </Button>
@@ -109,64 +122,63 @@ export default function AlertsPage() {
         </CardContent>
       </Card>
 
-      <div className="space-y-4">
-        {filtered.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <AlertTriangle className="size-10 text-muted-foreground mb-3" />
-              <p className="text-sm text-muted-foreground">
-                Nenhum alerta encontrado.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-        filtered.map((warning) => {
-          const config = warningTypeConfig[warning.type];
-          const { date, time } = formatDateTime(warning.createdAt);
+      {loading ? (
+        <div className="flex items-center gap-2 text-muted-foreground text-sm">
+          <Loader2 className="size-4 animate-spin" />
+          Carregando alertas...
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {warnings.length === 0 ? (
+              <div className="col-span-full">
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                    <AlertTriangle className="size-10 text-muted-foreground mb-3" />
+                    <p className="text-sm text-muted-foreground">Nenhum alerta encontrado.</p>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              warnings.map((warning) => {
+                const config = warningConfig[warning.type];
+                const { date, time } = formatDateTime(warning.createdAt);
 
-          return (
-            <Card key={warning.id} className={`border-l-4 ${borderColor[warning.type]}`}>
-              <CardContent className="p-5">
-                <div className="flex items-start gap-3">
-                  <AlertTriangle className={`size-5 mt-0.5 ${warning.type === "critico" ? "text-destructive" : "text-warning"}`} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge variant={config.variant}>{config.label}</Badge>
-                      <span className="text-sm text-muted-foreground">
-                        {date}, {time}
-                      </span>
-                    </div>
-                    <p className="font-semibold">{warning.message}</p>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      Cliente: {warning.clientName}
-                    </p>
-                    <div className="flex items-center gap-2 mt-3">
-                      <Button size="sm" asChild>
-                        <Link href={`/receipts/${warning.pixReceiptId}`}>
-                          <Eye className="size-4" />
-                          Ver Comprovante
-                        </Link>
-                      </Button>
-                      <ResolveAlertDialog
-                        trigger={
-                          <Button variant="outline" size="sm">
-                            Resolver
-                          </Button>
-                        }
-                        onConfirm={(reason) => {
-                          // TODO: integrar com API
-                          console.log("Resolver alerta", warning.id, reason);
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })
-        )}
-      </div>
+                return (
+                  <Card key={warning.id}>
+                    <CardContent className="p-5">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant={config.variant}>{config.label}</Badge>
+                        <span className="text-sm text-muted-foreground">{date}, {time}</span>
+                      </div>
+                      <p className="font-semibold">{warning.message}</p>
+                      {warning.client && (
+                        <p className="text-sm text-muted-foreground mt-0.5">
+                          Cliente: {warning.client.name}
+                        </p>
+                      )}
+                      <div className="flex flex-col items-stretch gap-2 mt-3">
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href={`/receipts/${warning.pixReceiptId}`}>
+                            <Eye className="size-4" />
+                            Ver Comprovante
+                          </Link>
+                        </Button>
+                        <ResolveAlertDialog
+                          trigger={<Button variant="outline" size="sm">Resolver</Button>}
+                          onConfirm={(reason) => handleResolve(warning.id, reason)}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        </>
+      )}
     </div>
   );
 }

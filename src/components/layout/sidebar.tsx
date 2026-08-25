@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { deleteCookie } from "cookies-next";
-import { warnings } from "@/data/mock-alerts";
+
 import {
   LayoutDashboard,
   Receipt,
@@ -80,7 +80,7 @@ const baseNavItems: NavItem[] = [
   { label: "Comprovantes", href: "/receipts", icon: Receipt },
   { label: "Clientes", href: "/clients", icon: Users },
   { label: "Contas a Receber", href: "/receivables", icon: Wallet },
-  { label: "Alertas", href: "/alerts", icon: Bell, badge: warnings.filter((w) => !w.resolved).length },
+  { label: "Alertas", href: "/alerts", icon: Bell },
   { label: "WhatsApp", href: "/whatsapp", icon: MessageCircle },
   { label: "Configurações", href: "/settings", icon: Settings },
 ];
@@ -187,11 +187,8 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
   const { isConnected } = useWhatsApp();
-
   const navItems = baseNavItems.map((item) =>
-    item.href === "/whatsapp" && isConnected
-      ? { ...item, indicator: "success" as const }
-      : item
+    item.href === "/whatsapp" && isConnected ? { ...item, indicator: "success" as const } : item
   );
 
   function isActive(href: string) {

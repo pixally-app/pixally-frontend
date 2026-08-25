@@ -13,6 +13,8 @@ const buttonVariants = cva(
           "border border-border bg-transparent text-foreground hover:bg-accent",
         destructive:
           "bg-destructive text-white hover:bg-destructive/90",
+        warning:
+          "bg-warning text-white hover:bg-warning/90",
         ghost:
           "bg-transparent hover:bg-accent",
       },
