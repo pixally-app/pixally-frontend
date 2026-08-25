@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -10,19 +11,26 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useIsMobile } from "@/hooks/use-mobile";
-
-const data = [
-  { date: "25/03", valor: 1200 },
-  { date: "26/03", valor: 1800 },
-  { date: "27/03", valor: 750 },
-  { date: "28/03", valor: 1500 },
-  { date: "29/03", valor: 2100 },
-  { date: "30/03", valor: 1350 },
-  { date: "31/03", valor: 900 },
-];
+import { getDashboardGraphic, type GraphicPoint } from "@/services/dashboard";
 
 export function ReceiptsChart() {
   const isMobile = useIsMobile();
+  const [data, setData] = useState<GraphicPoint[]>([]);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    getDashboardGraphic()
+      .then(setData)
+      .catch(() => setError(true));
+  }, []);
+
+  if (error) {
+    return (
+      <div className="flex h-[320px] items-center justify-center text-sm text-muted-foreground">
+        Não foi possível carregar os dados do gráfico.
+      </div>
+    );
+  }
 
   return (
     <ResponsiveContainer width="100%" height={isMobile ? 350 : 320}>
