@@ -105,22 +105,18 @@ export default function AlertsPage() {
         ))}
       </div>
 
-      <Card>
-        <CardContent className="p-5">
-          <div className="flex gap-2">
-            {filters.map((f) => (
-              <Button
-                key={f.value}
-                variant={filter === f.value ? f.activeVariant : "outline"}
-                size="sm"
-                onClick={() => handleFilterChange(f.value)}
-              >
-                {f.label}
-              </Button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex gap-2">
+        {filters.map((f) => (
+          <Button
+            key={f.value}
+            variant={filter === f.value ? f.activeVariant : "outline"}
+            size="sm"
+            onClick={() => handleFilterChange(f.value)}
+          >
+            {f.label}
+          </Button>
+        ))}
+      </div>
 
       {loading ? (
         <div className="flex items-center gap-2 text-muted-foreground text-sm">

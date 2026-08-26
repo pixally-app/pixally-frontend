@@ -87,7 +87,7 @@ export function UploadReceipt() {
           isDragging && !uploading && "border-primary bg-primary/5"
         )}
       >
-        <div className="rounded-full bg-muted p-3 text-muted-foreground">
+        <div className="text-muted-foreground">
           {uploading ? (
             <Loader2 className="size-6 animate-spin" />
           ) : (

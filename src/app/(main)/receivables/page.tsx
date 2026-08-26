@@ -13,7 +13,7 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
-import { Plus, ChevronRight, Wallet, Clock, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Plus, ChevronRight, Wallet } from "lucide-react";
 import { ReceivableFormDialog } from "@/components/receivables/receivable-form-dialog";
 import { statusConfig } from "@/components/receivables/status-config";
 import { formatCurrency, formatDate } from "@/lib/formatters";
@@ -114,44 +114,6 @@ export default function ReceivablesPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Pendente</span>
-              <Clock className="size-5 text-warning" />
-            </div>
-            <p className="text-2xl font-bold text-warning">
-              {formatCurrency(summary.pendente)}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Pago</span>
-              <CheckCircle2 className="size-5 text-success" />
-            </div>
-            <p className="text-2xl font-bold text-success">
-              {formatCurrency(summary.pago)}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Vencido</span>
-              <AlertTriangle className="size-5 text-destructive" />
-            </div>
-            <p className="text-2xl font-bold text-destructive">
-              {formatCurrency(summary.vencido)}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="grid grid-cols-3 sm:flex sm:flex-row gap-2">
           {filters.map((f) => (
@@ -175,6 +137,29 @@ export default function ReceivablesPage() {
           }
           onSubmit={handleCreate}
         />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-5">
+            <p className="text-sm text-muted-foreground mb-2">Pendente</p>
+            <p className="text-2xl font-bold text-warning">{formatCurrency(summary.pendente)}</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-5">
+            <p className="text-sm text-muted-foreground mb-2">Pago</p>
+            <p className="text-2xl font-bold text-success">{formatCurrency(summary.pago)}</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-5">
+            <p className="text-sm text-muted-foreground mb-2">Vencido</p>
+            <p className="text-2xl font-bold text-destructive">{formatCurrency(summary.vencido)}</p>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
