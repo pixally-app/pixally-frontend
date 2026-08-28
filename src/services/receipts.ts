@@ -171,6 +171,29 @@ export async function reconcileReceipt(id: string, accountReceivableId: string):
   }
 }
 
+export interface ExportReceiptsParams {
+  status?: ReceiptStatus;
+  origin?: ReceiptOrigin;
+  clientName?: string;
+}
+
+export async function exportReceiptsCsv(params?: ExportReceiptsParams): Promise<void> {
+  try {
+    const response = await api.get("/receipts/export/csv", {
+      params,
+      responseType: "blob",
+    });
+    const url = URL.createObjectURL(response.data as Blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "comprovantes.csv";
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 100);
+  } catch (err) {
+    throw resolveApiError(err, {}, "Erro ao exportar comprovantes.");
+  }
+}
+
 export async function uploadReceipt(file: File): Promise<Receipt> {
   try {
     const formData = new FormData();
