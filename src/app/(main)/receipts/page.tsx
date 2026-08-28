@@ -23,7 +23,7 @@ import {
 import { Search, Download, Eye, FileText } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { listReceipts, type Receipt, type ReceiptStatus, type ReceiptOrigin } from "@/services/receipts";
+import { listReceipts, exportReceiptsCsv, type Receipt, type ReceiptStatus, type ReceiptOrigin } from "@/services/receipts";
 import { statusConfig, originConfig } from "@/components/receipts/status-config";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDateTime } from "@/lib/formatters";
@@ -36,6 +36,7 @@ export default function ReceiptsPage() {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 500);
@@ -62,6 +63,22 @@ export default function ReceiptsPage() {
   useEffect(() => {
     fetchReceipts();
   }, [fetchReceipts]);
+
+  const handleExportCsv = async () => {
+    try {
+      setExporting(true);
+      const params: Parameters<typeof exportReceiptsCsv>[0] = {};
+      if (statusFilter !== "all") params.status = statusFilter as ReceiptStatus;
+      if (originFilter !== "all") params.origin = originFilter as ReceiptOrigin;
+      if (debouncedSearch) params.clientName = debouncedSearch;
+      await exportReceiptsCsv(params);
+      toast.success("CSV exportado com sucesso!");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao exportar CSV.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const hasAnalysing = receipts.some((r) => r.status === "ANALYSING");
 
@@ -118,9 +135,9 @@ export default function ReceiptsPage() {
             </SelectContent>
           </Select>
 
-          <Button className="ml-auto sm:ml-0">
+          <Button className="ml-auto sm:ml-0" onClick={handleExportCsv} disabled={exporting}>
             <Download className="size-4" />
-            Exportar CSV
+            {exporting ? "Exportando..." : "Exportar CSV"}
           </Button>
         </div>
       </div>
