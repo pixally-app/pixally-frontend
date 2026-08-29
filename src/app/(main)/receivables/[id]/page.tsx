@@ -119,7 +119,6 @@ export default function ReceivableDetailsPage({
   }
 
   const status = statusConfig[receivable.status];
-  const StatusIcon = status.icon;
 
   const installments = receivable.installments ?? [];
   const isInstallment = installments.length > 0;
@@ -178,10 +177,7 @@ export default function ReceivableDetailsPage({
                 <div>
                   <dt className="text-sm text-muted-foreground">Status</dt>
                   <dd>
-                    <Badge variant={status.variant} className="gap-1">
-                      <StatusIcon className="size-3" />
-                      {status.label}
-                    </Badge>
+                    <Badge variant={status.variant}>{status.label}</Badge>
                   </dd>
                 </div>
                 {isInstallment && (

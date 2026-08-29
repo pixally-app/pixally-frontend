@@ -46,6 +46,9 @@ export interface PaginatedReceivables {
   page: number;
   limit: number;
   totalPages: number;
+  totalPending: number;
+  totalPaid: number;
+  totalOverdue: number;
 }
 
 export interface ListReceivablesParams {
