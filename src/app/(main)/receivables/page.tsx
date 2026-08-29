@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Pagination } from "@/components/ui/pagination";
 import {
   Table,
   TableHeader,
@@ -17,6 +18,7 @@ import { Plus, ChevronRight, Wallet } from "lucide-react";
 import { ReceivableFormDialog } from "@/components/receivables/receivable-form-dialog";
 import { statusConfig } from "@/components/receivables/status-config";
 import { formatCurrency, formatDate } from "@/lib/formatters";
+import { PAGE_SIZE } from "@/lib/constants";
 import {
   listReceivables,
   createReceivable,
@@ -40,42 +42,29 @@ export default function ReceivablesPage() {
   const [filter, setFilter] = useState<FilterValue>("all");
   const [receivables, setReceivables] = useState<AccountReceivable[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [summary, setSummary] = useState({ pendente: 0, pago: 0, vencido: 0 });
 
-  const fetchReceivables = useCallback(async () => {
+  const fetchReceivables = useCallback(async (p: number, f: FilterValue) => {
     try {
       setLoading(true);
-      const params = filter !== "all" ? { status: filter as AccountReceivableStatus, limit: 100 } : { limit: 100 };
+      const params: Parameters<typeof listReceivables>[0] = { page: p, limit: PAGE_SIZE };
+      if (f !== "all") params.status = f as AccountReceivableStatus;
       const response = await listReceivables(params);
       setReceivables(response.data);
+      setTotalPages(response.totalPages);
+      setSummary({ pendente: response.totalPending, pago: response.totalPaid, vencido: response.totalOverdue });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao carregar contas a receber.");
     } finally {
       setLoading(false);
     }
-  }, [filter]);
+  }, []);
 
   useEffect(() => {
-    fetchReceivables();
-  }, [fetchReceivables]);
-
-  const sortedReceivables = useMemo(
-    () => [...receivables].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
-    [receivables]
-  );
-
-  const summary = useMemo(() => {
-    let pendente = 0;
-    let pago = 0;
-    let vencido = 0;
-
-    for (const r of receivables) {
-      if (r.status === "PENDING") pendente += r.totalAmount;
-      else if (r.status === "PAID") pago += r.totalAmount;
-      else if (r.status === "OVERDUE") vencido += r.totalAmount;
-    }
-
-    return { pendente, pago, vencido };
-  }, [receivables]);
+    fetchReceivables(page, filter);
+  }, [fetchReceivables, page, filter]);
 
   async function handleCreate(data: {
     serviceName: string;
@@ -98,7 +87,7 @@ export default function ReceivablesPage() {
         dueDate: data.dueDate,
       });
       toast.success("Conta a receber criada com sucesso!");
-      fetchReceivables();
+      fetchReceivables(page, filter);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao criar conta a receber.");
       throw err;
@@ -121,7 +110,7 @@ export default function ReceivablesPage() {
               key={f.value}
               variant={filter === f.value ? "default" : "outline"}
               size="sm"
-              onClick={() => setFilter(f.value)}
+              onClick={() => { setFilter(f.value); setPage(1); }}
             >
               {f.label}
             </Button>
@@ -191,7 +180,7 @@ export default function ReceivablesPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              sortedReceivables.map((r) => {
+              receivables.map((r) => {
                 const config = statusConfig[r.status];
                 const StatusIcon = config.icon;
 
@@ -233,6 +222,8 @@ export default function ReceivablesPage() {
           </TableBody>
         </Table>
       </Card>
+
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
     </div>
   );
 }
