@@ -49,6 +49,7 @@ export default function ReceivablesPage() {
   const fetchReceivables = useCallback(async (p: number, f: FilterValue) => {
     try {
       setLoading(true);
+
       const params: Parameters<typeof listReceivables>[0] = { page: p, limit: PAGE_SIZE };
       if (f !== "all") params.status = f as AccountReceivableStatus;
       const response = await listReceivables(params);
@@ -182,7 +183,6 @@ export default function ReceivablesPage() {
             ) : (
               receivables.map((r) => {
                 const config = statusConfig[r.status];
-                const StatusIcon = config.icon;
 
                 return (
                   <TableRow
@@ -207,10 +207,7 @@ export default function ReceivablesPage() {
                     </TableCell>
                     <TableCell className="hidden sm:table-cell">{formatDate(r.dueDate)}</TableCell>
                     <TableCell className="hidden sm:table-cell">
-                      <Badge variant={config.variant} className="gap-1">
-                        <StatusIcon className="size-3" />
-                        {config.label}
-                      </Badge>
+                      <Badge variant={config.variant}>{config.label}</Badge>
                     </TableCell>
                     <TableCell className="w-10 pr-4">
                       <ChevronRight className="size-4 text-muted-foreground group-hover:text-foreground transition-colors" />

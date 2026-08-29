@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Pagination } from "@/components/ui/pagination";
 import {
   Table,
   TableHeader,
@@ -27,6 +28,7 @@ import { listReceipts, exportReceiptsCsv, type Receipt, type ReceiptStatus, type
 import { statusConfig, originConfig } from "@/components/receipts/status-config";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDateTime } from "@/lib/formatters";
+import { PAGE_SIZE } from "@/lib/constants";
 
 export default function ReceiptsPage() {
   const [search, setSearch] = useState("");
@@ -35,34 +37,59 @@ export default function ReceiptsPage() {
   const [originFilter, setOriginFilter] = useState<string>("all");
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(search), 500);
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 500);
     return () => clearTimeout(timer);
   }, [search]);
 
-  const fetchReceipts = useCallback(async (silent = false) => {
+  const fetchReceipts = useCallback(async (
+    p: number,
+    status: string,
+    origin: string,
+    clientName: string,
+    silent = false,
+  ) => {
     try {
       if (!silent) setLoading(true);
-      const params: Parameters<typeof listReceipts>[0] = { limit: 100 };
-      if (statusFilter !== "all") params.status = statusFilter as ReceiptStatus;
-      if (originFilter !== "all") params.origin = originFilter as ReceiptOrigin;
-      if (debouncedSearch) params.clientName = debouncedSearch;
+      const params: Parameters<typeof listReceipts>[0] = { page: p, limit: PAGE_SIZE };
+      if (status !== "all") params.status = status as ReceiptStatus;
+      if (origin !== "all") params.origin = origin as ReceiptOrigin;
+      if (clientName) params.clientName = clientName;
       const response = await listReceipts(params);
       setReceipts(response.data);
       setTotal(response.total);
+      setTotalPages(response.totalPages);
     } catch (err) {
       if (!silent) toast.error(err instanceof Error ? err.message : "Erro ao carregar comprovantes.");
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [debouncedSearch, statusFilter, originFilter]);
+  }, []);
 
   useEffect(() => {
-    fetchReceipts();
-  }, [fetchReceipts]);
+    fetchReceipts(page, statusFilter, originFilter, debouncedSearch);
+  }, [fetchReceipts, page, statusFilter, originFilter, debouncedSearch]);
+
+  const hasAnalysing = receipts.some((r) => r.status === "ANALYSING");
+
+  useEffect(() => {
+    const interval = setInterval(
+      () => fetchReceipts(page, statusFilter, originFilter, debouncedSearch, true),
+      hasAnalysing ? 3000 : 5000,
+    );
+    return () => clearInterval(interval);
+  }, [hasAnalysing, fetchReceipts, page, statusFilter, originFilter, debouncedSearch]);
+
+  const handleStatusChange = (value: string) => { setStatusFilter(value); setPage(1); };
+  const handleOriginChange = (value: string) => { setOriginFilter(value); setPage(1); };
 
   const handleExportCsv = async () => {
     try {
@@ -79,13 +106,6 @@ export default function ReceiptsPage() {
       setExporting(false);
     }
   };
-
-  const hasAnalysing = receipts.some((r) => r.status === "ANALYSING");
-
-  useEffect(() => {
-    const interval = setInterval(() => fetchReceipts(true), hasAnalysing ? 3000 : 5000);
-    return () => clearInterval(interval);
-  }, [hasAnalysing, fetchReceipts]);
 
   return (
     <div className="space-y-6">
@@ -109,7 +129,7 @@ export default function ReceiptsPage() {
         </div>
 
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={handleStatusChange}>
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -124,7 +144,7 @@ export default function ReceiptsPage() {
             </SelectContent>
           </Select>
 
-          <Select value={originFilter} onValueChange={setOriginFilter}>
+          <Select value={originFilter} onValueChange={handleOriginChange}>
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Origem" />
             </SelectTrigger>
@@ -265,6 +285,8 @@ export default function ReceiptsPage() {
           </TableBody>
         </Table>
       </Card>
+
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
     </div>
   );
 }
