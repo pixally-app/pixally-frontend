@@ -1,5 +1,6 @@
-export function formatCurrency(value: number | string) {
-  return Number(value).toLocaleString("pt-BR", {
+export function formatCurrency(value: number | string | null | undefined) {
+  const num = Number(value ?? 0);
+  return (isNaN(num) ? 0 : num).toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
   });

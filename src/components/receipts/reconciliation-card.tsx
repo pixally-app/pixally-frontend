@@ -190,7 +190,7 @@ export function ReconciliationCard({ receipt, onUpdate: _onUpdate }: Reconciliat
               <div className="text-sm text-muted-foreground">Conta a receber</div>
               <div className="text-sm font-medium text-right max-w-[60%]">
                 {linkedReceivable
-                  ? `${linkedReceivable.serviceName ?? "Sem nome"} — ${formatCurrency(linkedReceivable.totalAmount)}`
+                  ? `${linkedReceivable.serviceName ?? "Sem nome"} - ${formatCurrency(linkedReceivable.totalAmount)}`
                   : <span className="text-muted-foreground">-</span>
                 }
               </div>
