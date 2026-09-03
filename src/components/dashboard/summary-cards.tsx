@@ -10,7 +10,7 @@ const cardConfig = [
   { label: "Recebido este mês", key: "receivedThisMonth" as const, format: "currency", valueClassName: "text-success" },
   { label: "A receber", key: "totalPending" as const, format: "currency", valueClassName: "text-warning" },
   { label: "Vencidos", key: "totalOverdue" as const, format: "currency", valueClassName: "text-destructive" },
-  { label: "Comprovantes processados", key: "processedThisMonth" as const, format: "number" },
+  { label: "Processados este mês", key: "processedThisMonth" as const, format: "number" },
 ];
 
 export function SummaryCards() {
