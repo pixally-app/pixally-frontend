@@ -23,12 +23,6 @@ export const receivableSchema = z
     isInstallment: z.boolean(),
     installments: z.number().int().min(1),
   })
-  .refine(
-    (data) => !data.isInstallment || data.installments >= 2,
-    {
-      message: "Mínimo de 2 parcelas",
-      path: ["installments"],
-    }
-  );
+  ;
 
 export type ReceivableFormValues = z.infer<typeof receivableSchema>;

@@ -215,13 +215,13 @@ export function ReceivableFormDialog({
                 <Input
                   id="receivable-installments"
                   type="number"
-                  min={2}
-                  placeholder="2"
-                  value={installments > 1 ? installments : ""}
+                  min={1}
+                  placeholder="1"
+                  value={installments || ""}
                   aria-invalid={!!errors.installments}
                   aria-describedby={errors.installments ? "receivable-installments-error" : undefined}
                   onChange={(e) =>
-                    setValue("installments", parseInt(e.target.value) || 2, { shouldValidate: true })
+                    setValue("installments", parseInt(e.target.value) || 1, { shouldValidate: true })
                   }
                 />
                 <FormErrorMessage id="receivable-installments-error" message={errors.installments?.message} />
