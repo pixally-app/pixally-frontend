@@ -21,7 +21,7 @@ export function WhatsAppProvider({ children }: { children: React.ReactNode }) {
 
   const refreshStatus = React.useCallback(async () => {
     const data = await getZapfyStatus();
-    const connected = data.active && data.state === "connected";
+    const connected = data.active && (data.state === "open" || data.state === "connected");
     setIsConnected(connected);
     setConnectedAt(data.connectedAt);
     setStatusError(null);
